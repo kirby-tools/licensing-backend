@@ -23,7 +23,7 @@ class Licenses
     ) {
     }
 
-    public static function read(string $packageName): static
+    public static function read(string $packageName, array $options = []): static
     {
         try {
             $licenses = Json::read(App::instance()->root('config') . '/' . static::LICENSE_FILE);
@@ -34,7 +34,9 @@ class Licenses
         $instance = new static($licenses, $packageName);
 
         // Run migration for private Composer repository
-        // $instance->migration();
+        if ($options['migrate'] ?? true) {
+            $instance->migration();
+        }
 
         return $instance;
     }
@@ -64,9 +66,9 @@ class Licenses
         Json::write(App::instance()->root('config') . '/' . static::LICENSE_FILE, $this->licenses);
     }
 
-    public function isRegistered(string $packageName): bool
+    public function isRegistered(): bool
     {
-        $licenseKey = $this->licenses[$packageName] ?? null;
+        $licenseKey = $this->licenses[$this->packageName] ?? null;
         return $licenseKey !== null && $this->isValid($licenseKey);
     }
 
