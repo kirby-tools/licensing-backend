@@ -1,7 +1,7 @@
 {
   "name": "johannschopplich/kirby-tools-licensing",
   "description": "Shared tooling for licensing server-side",
-  "type": "false",
+  "type": "library",
   "version": "0.1.1",
   "license": "MIT",
   "homepage": "https://github.com/kirby-tools/licensing-backend#readme",
