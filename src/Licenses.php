@@ -60,7 +60,7 @@ class Licenses
         $this->update($packageName, $key);
     }
 
-    public function registerFromRequest(): bool
+    public function registerFromRequest(): array
     {
         $request = App::instance()->request();
         $email = $request->get('email');
@@ -72,7 +72,10 @@ class Licenses
 
         $this->register($email, $orderId);
 
-        return true;
+        return [
+            'status' => 'success',
+            'message' => 'License key registered successfully'
+        ];
     }
 
     public function update(string $packageName, string $licenseKey): void
