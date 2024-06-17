@@ -73,7 +73,8 @@ class Licenses
         $this->register($email, $orderId);
 
         return [
-            'status' => 'success',
+            'code' => 200,
+            'status' => 'ok',
             'message' => 'License key registered successfully'
         ];
     }
