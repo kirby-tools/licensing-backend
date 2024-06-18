@@ -43,6 +43,10 @@ class Licenses
 
     public function register(string $email, string|int $orderId): void
     {
+        if ($this->isRegistered()) {
+            throw new LogicException('License key already registered');
+        }
+
         $response = $this->request('licenses', [
             'method' => 'POST',
             'data' => [
