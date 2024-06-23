@@ -14,7 +14,7 @@ use Throwable;
 class Licenses
 {
     private const LICENSE_FILE = '.kirby-tools-licenses';
-    private const LICENSE_PATTERN = '!^KT\d-\w+-\w+$!';
+    private const LICENSE_PATTERN = '!^KT(\d)-\w+-\w+$!';
     private const API_URL = 'https://repo.kirby.tools/api';
 
     public function __construct(
@@ -33,12 +33,49 @@ class Licenses
 
         $instance = new static($licenses, $packageName);
 
-        // Run migration for private Composer repository
+        // Run migration from private Composer repository
         if ($options['migrate'] ?? true) {
             $instance->migration();
         }
 
         return $instance;
+    }
+
+    public function getLicenseKey(): string|null
+    {
+        return $this->licenses[$this->packageName] ?? null;
+    }
+
+    public function getLicenseVersion(): int|null
+    {
+        $licenseKey = $this->getLicenseKey();
+
+        if (preg_match(static::LICENSE_PATTERN, $licenseKey, $matches) === 1) {
+            return (int)$matches[1];
+        }
+    }
+
+    public function getLicense(): array|bool
+    {
+        if (!$this->isRegistered()) {
+            return false;
+        }
+
+        return [
+            'licenseKey' => $this->getLicenseKey(),
+            'version' => $this->getLicenseVersion()
+        ];
+    }
+
+    public function isRegistered(): bool
+    {
+        $licenseKey = $this->getLicenseKey();
+        return $licenseKey !== null && $this->isValid($licenseKey);
+    }
+
+    public function isValid(string $licenseKey): bool
+    {
+        return preg_match(static::LICENSE_PATTERN, $licenseKey) === 1;
     }
 
     public function register(string $email, string|int $orderId): void
@@ -87,17 +124,6 @@ class Licenses
     {
         $this->licenses[$packageName] = $licenseKey;
         Json::write(App::instance()->root('config') . '/' . static::LICENSE_FILE, $this->licenses);
-    }
-
-    public function isRegistered(): bool
-    {
-        $licenseKey = $this->licenses[$this->packageName] ?? null;
-        return $licenseKey !== null && $this->isValid($licenseKey);
-    }
-
-    public function isValid(string $licenseKey): bool
-    {
-        return preg_match(static::LICENSE_PATTERN, $licenseKey) === 1;
     }
 
     private function migration(): void
