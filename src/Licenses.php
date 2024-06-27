@@ -118,8 +118,10 @@ class Licenses
 
     public function isCompatible(string|null $versionConstraint): bool
     {
+        $kirbyPackageName = str_replace('/kirby-', '/', $this->packageName);
+
         return $versionConstraint !== null && Semver::satisfies(
-            App::instance()->plugin($this->packageName)?->version(),
+            App::instance()->plugin($kirbyPackageName)?->version(),
             $versionConstraint
         );
     }
