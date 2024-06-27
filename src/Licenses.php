@@ -188,12 +188,10 @@ class Licenses
             $this->licenses = Json::read($this->licenseFile);
         }
 
-        // Migration 2: If license values are strings, re-fetch license data from API
-        foreach ($this->licenses as $packageName => $value) {
-            if (is_string($value)) {
-                $response = $this->request('licenses/' . $value . '/package');
-                $this->update($packageName, $response);
-            }
+        // Migration 2: If license value is a string, re-fetch license data from API
+        if (is_string($this->licenses[$this->packageName] ?? null)) {
+            $response = $this->request('licenses/' . $this->licenses[$this->packageName] . '/package');
+            $this->update($this->packageName, $response);
         }
 
         // Migration 3: Migrate licenses from private Composer repository
@@ -207,7 +205,10 @@ class Licenses
             }
 
             // Extract all current license keys
-            $licenseKeys = array_map(fn ($license) => $license['licenseKey'], $this->licenses);
+            $licenseKeys = array_map(
+                fn ($license) => is_array($license) ? $license['licenseKey'] : $license,
+                $this->licenses
+            );
 
             // Get package name for licenses and update them
             foreach (Str::split($collection, ',', 8) as $licenseKey) {
@@ -216,7 +217,10 @@ class Licenses
                 }
 
                 $response = $this->request('licenses/' . $licenseKey . '/package');
-                $this->update($response['packageName'], $response);
+
+                if ($response['packageName'] === $this->packageName) {
+                    $this->update($this->packageName, $response);
+                }
             }
         } catch (Throwable) {
             // Ignore
