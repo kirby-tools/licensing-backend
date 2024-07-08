@@ -121,7 +121,7 @@ class Licenses
         $kirbyPackageName = str_replace('/kirby-', '/', $this->packageName);
         $version = App::instance()->plugin($kirbyPackageName)?->version();
 
-        if (!empty($version) && str_starts_with($version, 'dev-')) {
+        if ($version !== null && str_starts_with($version, 'dev-')) {
             throw new LogicException('Development versions are not supported');
         }
 
