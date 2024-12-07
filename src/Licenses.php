@@ -47,7 +47,6 @@ class Licenses
         }
 
         $instance = new static($licenses, $packageName);
-        $instance->migration();
         $instance->refresh();
 
         return $instance;
@@ -188,54 +187,6 @@ class Licenses
         ];
 
         Json::write($this->licenseFile, $this->licenses);
-    }
-
-    private function migration(): void
-    {
-        // Migration 1: Move license file to license directory (if applicable)
-        $oldLicenseFile = App::instance()->root('config') . '/' . static::LICENSE_FILE;
-        if (F::exists($oldLicenseFile) && $oldLicenseFile !== $this->licenseFile) {
-            F::move($oldLicenseFile, $this->licenseFile);
-            $this->licenses = Json::read($this->licenseFile);
-        }
-
-        // Migration 2: If license value is a string, re-fetch license data from API
-        if (is_string($this->licenses[$this->packageName] ?? null)) {
-            $response = $this->request('licenses/' . $this->licenses[$this->packageName] . '/package');
-            $this->update($this->packageName, $response);
-        }
-
-        // Migration 3: Migrate licenses from private Composer repository
-        $authFile = App::instance()->root('base') . '/auth.json';
-        try {
-            $auth = Json::read($authFile);
-            $collection = $auth['bearer']['repo.kirby.tools'] ?? null;
-
-            if (empty($collection)) {
-                return;
-            }
-
-            // Extract all current license keys
-            $licenseKeys = array_map(
-                fn ($license) => is_array($license) ? $license['licenseKey'] : $license,
-                $this->licenses
-            );
-
-            // Get package name for licenses and update them
-            foreach (Str::split($collection, ',', 8) as $licenseKey) {
-                if (!$this->isValid($licenseKey) || in_array($licenseKey, $licenseKeys)) {
-                    continue;
-                }
-
-                $response = $this->request('licenses/' . $licenseKey . '/package');
-
-                if ($response['packageName'] === $this->packageName) {
-                    $this->update($this->packageName, $response);
-                }
-            }
-        } catch (Throwable) {
-            // Ignore
-        }
     }
 
     private function refresh(): void
