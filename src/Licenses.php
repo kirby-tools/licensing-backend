@@ -8,9 +8,7 @@ use Composer\Semver\Semver;
 use Kirby\Cms\App;
 use Kirby\Data\Json;
 use Kirby\Exception\LogicException;
-use Kirby\Filesystem\F;
 use Kirby\Http\Remote;
-use Kirby\Toolkit\Str;
 use Throwable;
 
 /**
@@ -29,11 +27,11 @@ class Licenses
     private const LICENSE_FILE = '.kirby-tools-licenses';
     private const LICENSE_PATTERN = '!^KT(\d+)-\w+-\w+$!';
     private const API_URL = 'https://repo.kirby.tools/api';
-    private string $licenseFile;
+    private readonly string $licenseFile;
 
     public function __construct(
-        private array $licenses,
-        private string $packageName,
+        private readonly array $licenses,
+        private readonly string $packageName,
     ) {
         $this->licenseFile = dirname(App::instance()->root('license')) . '/' . static::LICENSE_FILE;
     }
@@ -96,6 +94,8 @@ class Licenses
         if (preg_match(static::LICENSE_PATTERN, $licenseKey, $matches) === 1) {
             return (int)$matches[1];
         }
+
+        return null;
     }
 
     public function getLicenseCompatibility(): string|null
@@ -127,10 +127,9 @@ class Licenses
             throw new LogicException('Development versions are not supported');
         }
 
-        return $versionConstraint !== null && Semver::satisfies(
-            $version,
-            $versionConstraint
-        );
+        return $versionConstraint !== null
+            && $version !== null
+            && Semver::satisfies($version, $versionConstraint);
     }
 
     public function register(string $email, string|int $orderId): void
