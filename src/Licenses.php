@@ -10,7 +10,6 @@ use Kirby\Data\Json;
 use Kirby\Exception\LogicException;
 use Kirby\Filesystem\F;
 use Kirby\Http\Remote;
-use Kirby\Toolkit\Str;
 use Throwable;
 
 /**
@@ -29,11 +28,11 @@ class Licenses
     private const LICENSE_FILE = '.kirby-tools-licenses';
     private const LICENSE_PATTERN = '!^KT(\d+)-\w+-\w+$!';
     private const API_URL = 'https://repo.kirby.tools/api';
-    private readonly string $licenseFile;
+    private string $licenseFile;
 
     public function __construct(
-        private readonly array $licenses,
-        private readonly string $packageName,
+        private array $licenses,
+        private string $packageName,
     ) {
         $this->licenseFile = dirname(App::instance()->root('license')) . '/' . static::LICENSE_FILE;
     }
@@ -65,11 +64,16 @@ class Licenses
             return 'invalid';
         }
 
-        if (!$this->isCompatible($this->getLicenseCompatibility())) {
-            return 'incompatible';
+        $compatibility = $this->getLicenseCompatibility();
+        if ($this->isCompatible($compatibility)) {
+            return 'active';
         }
 
-        return 'active';
+        if ($this->isUpgradeable($compatibility)) {
+            return 'upgradeable';
+        }
+
+        return 'incompatible';
     }
 
     public function getLicense(): array|bool
@@ -135,6 +139,38 @@ class Licenses
             && Semver::satisfies($version, $versionConstraint);
     }
 
+    public function isUpgradeable(string|null $versionConstraint): bool
+    {
+        if ($versionConstraint === null) {
+            return false;
+        }
+
+        $version = $this->getPluginVersion();
+        if ($version === null) {
+            return false;
+        }
+
+        // Parse version constraint to get major versions
+        $constraints = explode('||', $versionConstraint);
+        $maxLicensedMajor = 0;
+
+        foreach ($constraints as $constraint) {
+            $constraint = trim($constraint);
+            if (preg_match('/\^(\d+)/', $constraint, $matches)) {
+                $maxLicensedMajor = max($maxLicensedMajor, (int)$matches[1]);
+            }
+        }
+
+        // Get current version major
+        if (preg_match('/^(\d+)\./', $version, $matches)) {
+            $currentMajor = (int)$matches[1];
+            // If current major is higher than max supported major, it's upgradeable
+            return $currentMajor > $maxLicensedMajor;
+        }
+
+        return false;
+    }
+
     public function register(string $email, string|int $orderId): void
     {
         if ($this->isRegistered()) {
@@ -193,7 +229,7 @@ class Licenses
 
     private function migration(): void
     {
-        // Migration 1: Move license file to license directory (if applicable)
+        // Migration 1: Move license file to license directory
         $oldLicenseFile = App::instance()->root('config') . '/' . static::LICENSE_FILE;
         if (F::exists($oldLicenseFile) && $oldLicenseFile !== $this->licenseFile) {
             F::move($oldLicenseFile, $this->licenseFile);
@@ -204,38 +240,6 @@ class Licenses
         if (is_string($this->licenses[$this->packageName] ?? null)) {
             $response = $this->request('licenses/' . $this->licenses[$this->packageName] . '/package');
             $this->update($this->packageName, $response);
-        }
-
-        // Migration 3: Migrate licenses from private Composer repository
-        $authFile = App::instance()->root('base') . '/auth.json';
-        try {
-            $auth = Json::read($authFile);
-            $collection = $auth['bearer']['repo.kirby.tools'] ?? null;
-
-            if (empty($collection)) {
-                return;
-            }
-
-            // Extract all current license keys
-            $licenseKeys = array_map(
-                fn ($license) => is_array($license) ? $license['licenseKey'] : $license,
-                $this->licenses
-            );
-
-            // Get package name for licenses and update them
-            foreach (Str::split($collection, ',', 8) as $licenseKey) {
-                if (!$this->isValid($licenseKey) || in_array($licenseKey, $licenseKeys)) {
-                    continue;
-                }
-
-                $response = $this->request('licenses/' . $licenseKey . '/package');
-
-                if ($response['packageName'] === $this->packageName) {
-                    $this->update($this->packageName, $response);
-                }
-            }
-        } catch (Throwable) {
-            // Ignore
         }
     }
 
