@@ -190,6 +190,10 @@ class Licenses
         }
 
         if (!$this->isCompatible($response['licenseCompatibility'])) {
+            if ($this->isUpgradeable($response['licenseCompatibility'])) {
+                throw new LogicException('License key not valid for this plugin version, please upgrade your license');
+            }
+
             throw new LogicException('License key not valid for this plugin version');
         }
 
