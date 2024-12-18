@@ -274,7 +274,7 @@ class Licenses
 
         if (!in_array($response->code(), [200, 201], true)) {
             $message = $response->json()['message'] ?? 'Request failed';
-            throw new LogicException($message, $response->code());
+            throw new LogicException($message, (string)$response->code());
         }
 
         return $response->json();
