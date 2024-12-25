@@ -178,7 +178,7 @@ class Licenses
             throw new LogicException('License key already registered');
         }
 
-        $response = $this->request('licenses', [
+        $response = $this->request('auth/activate', [
             'method' => 'POST',
             'data' => [
                 'email' => $email,
