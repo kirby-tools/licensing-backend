@@ -272,7 +272,7 @@ class Licenses
             ]
         ]));
 
-        if (!in_array($response->code(), [200, 201], true)) {
+        if ($response->code() < 200 || $response->code() >= 300) {
             $message = $response->json()['message'] ?? 'Request failed';
             throw new LogicException($message, (string)$response->code());
         }
