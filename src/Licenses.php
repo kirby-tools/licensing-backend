@@ -10,6 +10,7 @@ use Kirby\Data\Json;
 use Kirby\Exception\LogicException;
 use Kirby\Filesystem\F;
 use Kirby\Http\Remote;
+use Kirby\Toolkit\A;
 use Throwable;
 
 /**
@@ -266,7 +267,7 @@ class Licenses
 
     private function request(string $path, array $options = []): array
     {
-        $response = new Remote(static::API_URL . '/' . $path, array_merge($options, [
+        $response = new Remote(static::API_URL . '/' . $path, A::merge($options, [
             'headers' => [
                 'X-App-Url' => App::instance()->url()
             ]
