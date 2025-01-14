@@ -267,11 +267,11 @@ class Licenses
 
     private function request(string $path, array $options = []): array
     {
-        $response = new Remote(static::API_URL . '/' . $path, A::merge($options, [
+        $response = new Remote(static::API_URL . '/' . $path, A::merge([
             'headers' => [
                 'X-App-Url' => App::instance()->url()
             ]
-        ]));
+        ], $options));
 
         if ($response->code() < 200 || $response->code() >= 300) {
             $message = $response->json()['message'] ?? 'Request failed';
