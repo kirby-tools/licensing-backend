@@ -1,18 +1,23 @@
 # Kirby Tools Licensing Backend
 
-Backend licensing system for all commercial [Kirby Tools plugins](https://kirby.tools). This package provides server-side license validation, activation, and management for Kirby Tools plugins within the Kirby CMS ecosystem.
+Backend licensing system for all commercial [Kirby Tools plugins](https://kirby.tools). This package provides server-side license validation, activation, and management that enables:
 
-## What It Does
+- Trial periods and license enforcement
+- Seamless license activation from within Kirby
+- Version-based license compatibility checking
+- [Panel integration for license status display](https://getkirby.com/releases/5/plugin-license)
 
-This licensing backend handles:
+For Panel-side licensing UI components, see [@kirby-tools/licensing](https://github.com/kirby-tools/licensing-panel).
+
+## Classes
+
+The licensing classes handle:
 
 - **License Validation**: Validates Kirby Tools license keys against the remote API
 - **Plugin Integration**: Seamlessly integrates with Kirby 5's native plugin license system
 - **Version Compatibility**: Checks license compatibility with plugin versions using semantic versioning
 - **License Management**: Handles license activation, storage, and status reporting
 - **Automatic Updates**: Refreshes license data when plugin versions change
-
-## Classes
 
 ### `Licenses`
 
@@ -32,17 +37,6 @@ Kirby 5 integration adapter that:
 - Maps internal license statuses to [Kirby's license status system](https://getkirby.com/releases/5/plugin-license)
 - Provides standardized license display in the Kirby Panel
 - Integrates with Kirby's plugin management interface
-
-## Usage in Kirby Tools Plugins
-
-This package is automatically included in all commercial Kirby Tools plugins and provides the licensing infrastructure that enables:
-
-- Trial periods and license enforcement
-- [Panel integration for license status display](https://getkirby.com/releases/5/plugin-license)
-- Seamless license activation from within Kirby
-- Version-based license compatibility checking
-
-For Panel-side licensing UI components, see [@kirby-tools/licensing](https://github.com/kirby-tools/licensing-panel).
 
 ## License
 
