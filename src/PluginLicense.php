@@ -22,8 +22,7 @@ class PluginLicense extends KirbyLicense
 
     public function __construct(
         Plugin $plugin,
-        protected string $packageName,
-        protected string|null $pricingUrl = null
+        protected string $packageName
     ) {
         $licenses = Licenses::read($packageName);
         $status = $this->mapToKirbyStatus($licenses->getStatus());
