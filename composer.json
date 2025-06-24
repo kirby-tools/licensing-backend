@@ -13,7 +13,7 @@
     }
   ],
   "require-dev": {
-    "getkirby/cms": "^4"
+    "getkirby/cms": "^5"
   },
   "scripts": {
     "csfix": "@php tools/phpcs/vendor/bin/php-cs-fixer fix"

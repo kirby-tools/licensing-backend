@@ -14,15 +14,19 @@ use Kirby\Toolkit\A;
 use Throwable;
 
 /**
+ * Manages licenses for Kirby Tools plugins.
+ *
  * If you're here to learn all about how licenses are managed in Kirby Tools,
  * you're in the right place.
  *
  * However, if you're trying to figure out how to crack the license system,
- * please stop right here. I've put a lot of effort into creating Kirby Tools
- * and I'm sure you can appreciate that. If you like the plugin, please consider
+ * please stop. I've put a lot of effort into creating Kirby Tools and I'm
+ * sure you can appreciate that. If you like the plugin, please consider
  * supporting me by purchasing a license. Thank you!
  *
- * @see https://kirby.tools
+ * @link      https://kirby.tools
+ * @copyright Johann Schopplich
+ * @license   AGPL-3.0
  */
 class Licenses
 {
