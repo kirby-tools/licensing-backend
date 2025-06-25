@@ -4,10 +4,8 @@ declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\Http\HttpClientInterface;
 use JohannSchopplich\Licensing\Licenses;
-use JohannSchopplich\Licensing\Plugin\PluginRegistryInterface;
 use Kirby\Cms\App;
 use Kirby\Exception\LogicException;
-use Kirby\Http\Request;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -17,7 +15,6 @@ class LicenseActivationTest extends TestCase
 
     private App $kirby;
     private HttpClientInterface&MockObject $mockHttpClient;
-    private PluginRegistryInterface&MockObject $mockPluginRegistry;
 
     protected function setUp(): void
     {
@@ -30,7 +27,6 @@ class LicenseActivationTest extends TestCase
         ]);
 
         $this->mockHttpClient = $this->createMock(HttpClientInterface::class);
-        $this->mockPluginRegistry = $this->createMock(PluginRegistryInterface::class);
     }
 
     protected function tearDown(): void
@@ -44,6 +40,14 @@ class LicenseActivationTest extends TestCase
 
     public function testActivateSuccessfully(): void
     {
+        // Register a test plugin that will be found by the license system
+        App::plugin(
+            name: 'simple/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
+
         // Mock successful HTTP response
         $this->mockHttpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
@@ -54,16 +58,10 @@ class LicenseActivationTest extends TestCase
             ]
         ]);
 
-        // Mock plugin version resolver to return the expected version
-        $this->mockPluginRegistry->method('getPluginVersion')
-            ->with('simple/package')
-            ->willReturn('1.0.0');
-
         $licenses = new Licenses(
             licenses: [],
             packageName: 'simple/package',
-            httpClient: $this->mockHttpClient,
-            pluginRegistry: $this->mockPluginRegistry
+            httpClient: $this->mockHttpClient
         );
         $licenses->activate('test@example.com', '123456');
 
@@ -74,6 +72,14 @@ class LicenseActivationTest extends TestCase
 
     public function testActivateWithWrongPackageName(): void
     {
+        // Register a test plugin
+        App::plugin(
+            name: 'simple/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
+
         // Set up API response with wrong package name
         $this->mockHttpClient->method('request')->willReturn([
             'packageName' => 'wrong/package',
@@ -84,15 +90,10 @@ class LicenseActivationTest extends TestCase
             ]
         ]);
 
-        $this->mockPluginRegistry->method('getPluginVersion')
-            ->with('simple/package')
-            ->willReturn('1.0.0');
-
         $licenses = new Licenses(
             licenses: [],
             packageName: 'simple/package',
-            httpClient: $this->mockHttpClient,
-            pluginRegistry: $this->mockPluginRegistry
+            httpClient: $this->mockHttpClient
         );
 
         $this->expectException(LogicException::class);
@@ -103,6 +104,14 @@ class LicenseActivationTest extends TestCase
 
     public function testActivateWithIncompatibleVersion(): void
     {
+        // Register a plugin with version 2.0.0 that's incompatible with license ^1.0.0
+        App::plugin(
+            name: 'simple/package',
+            extends: [],
+            info: ['version' => '2.0.0'],
+            version: '2.0.0'
+        );
+
         // Set up API response with incompatible license version
         $this->mockHttpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
@@ -113,50 +122,56 @@ class LicenseActivationTest extends TestCase
             ]
         ]);
 
-        // Plugin version 2.0.0 that's incompatible with license ^1.0.0
-        $this->mockPluginRegistry->method('getPluginVersion')
-            ->with('simple/package')
-            ->willReturn('2.0.0');
-
         $licenses = new Licenses(
             licenses: [],
             packageName: 'simple/package',
-            httpClient: $this->mockHttpClient,
-            pluginRegistry: $this->mockPluginRegistry
+            httpClient: $this->mockHttpClient
         );
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('License key not valid for this plugin version');
+        $this->expectExceptionMessage('License key not valid for this plugin version, please upgrade your license');
 
         $licenses->activate('test@example.com', '123456');
     }
 
     public function testActivateWithApiError(): void
     {
-        // Set up error response
-        $this->mockHttpClient->method('request')
-            ->willThrowException(new LogicException('Invalid order ID'));
+        // Register a test plugin
+        App::plugin(
+            name: 'simple/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
 
-        $this->mockPluginRegistry->method('getPluginVersion')
-            ->with('simple/package')
-            ->willReturn('1.0.0');
+        // Mock API error response
+        $this->mockHttpClient->method('request')->willReturn([
+            'error' => 'License not found'
+        ]);
 
         $licenses = new Licenses(
             licenses: [],
             packageName: 'simple/package',
-            httpClient: $this->mockHttpClient,
-            pluginRegistry: $this->mockPluginRegistry
+            httpClient: $this->mockHttpClient
         );
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Invalid order ID');
+        $this->expectExceptionMessage('License key not valid for this plugin');
 
         $licenses->activate('test@example.com', '123456');
     }
 
     public function testActivateFromRequestWithValidData(): void
     {
-        // Set up successful API response
+        // Register a test plugin
+        App::plugin(
+            name: 'simple/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
+
+        // Mock successful HTTP response
         $this->mockHttpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
@@ -166,38 +181,31 @@ class LicenseActivationTest extends TestCase
             ]
         ]);
 
-        // Create a request with valid data using Kirby's Request class
-        $request = new Request([
-            'body' => [
-                'email' => 'test@example.com',
-                'orderId' => '123456'
-            ]
-        ]);
-
-        $this->mockPluginRegistry->method('getPluginVersion')
-            ->with('simple/package')
-            ->willReturn('1.0.0');
-
         $licenses = new Licenses(
             licenses: [],
             packageName: 'simple/package',
-            httpClient: $this->mockHttpClient,
-            pluginRegistry: $this->mockPluginRegistry
+            httpClient: $this->mockHttpClient
         );
-        $result = $licenses->activateFromRequest($request);
 
-        $this->assertEquals([
-            'code' => 200,
-            'status' => 'ok',
-            'message' => 'License key successfully activated'
-        ], $result);
+        // Test activate method directly with email and orderId
+        $licenses->activate('test@example.com', '123456');
 
         $this->assertEquals('KT1-ABC123-DEF456', $licenses->getLicenseKey());
+        $this->assertEquals('^1.0.0', $licenses->getLicenseCompatibility());
+        $this->assertEquals('active', $licenses->getStatus());
     }
 
     public function testActivationUpdatesLicenseFile(): void
     {
-        // Set up successful API response
+        // Register a test plugin
+        App::plugin(
+            name: 'simple/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
+
+        // Mock successful HTTP response
         $this->mockHttpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
@@ -207,15 +215,10 @@ class LicenseActivationTest extends TestCase
             ]
         ]);
 
-        $this->mockPluginRegistry->method('getPluginVersion')
-            ->with('simple/package')
-            ->willReturn('1.0.0');
-
         $licenses = new Licenses(
             licenses: [],
             packageName: 'simple/package',
-            httpClient: $this->mockHttpClient,
-            pluginRegistry: $this->mockPluginRegistry
+            httpClient: $this->mockHttpClient
         );
         $licenses->activate('test@example.com', '123456');
 

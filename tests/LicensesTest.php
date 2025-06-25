@@ -3,7 +3,6 @@
 declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\Licenses;
-use JohannSchopplich\Licensing\Plugin\PluginRegistryInterface;
 use Kirby\Cms\App;
 use Kirby\Http\Request;
 use PHPUnit\Framework\TestCase;
@@ -143,10 +142,12 @@ class LicensesTest extends TestCase
 
     public function testActivateThrowsExceptionWhenAlreadyActivated(): void
     {
-        $mockPluginRegistry = $this->createMock(PluginRegistryInterface::class);
-        $mockPluginRegistry->method('getPluginVersion')
-            ->with('test/package')
-            ->willReturn('1.0.0');
+        App::plugin(
+            name: 'test/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
 
         // Create a licenses instance with an already activated license
         $licenses = new Licenses(
@@ -157,8 +158,7 @@ class LicensesTest extends TestCase
                 ]
             ],
             packageName: 'test/package',
-            httpClient: null,
-            pluginRegistry: $mockPluginRegistry
+            httpClient: null
         );
 
         $this->expectException(\Kirby\Exception\LogicException::class);

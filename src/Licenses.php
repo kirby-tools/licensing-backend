@@ -7,8 +7,6 @@ namespace JohannSchopplich\Licensing;
 use Composer\Semver\Semver;
 use JohannSchopplich\Licensing\Http\HttpClientInterface;
 use JohannSchopplich\Licensing\Http\KirbyHttpClient;
-use JohannSchopplich\Licensing\Plugin\KirbyPluginRegistry;
-use JohannSchopplich\Licensing\Plugin\PluginRegistryInterface;
 use Kirby\Cms\App;
 use Kirby\Data\Json;
 use Kirby\Exception\LogicException;
@@ -42,12 +40,10 @@ class Licenses
     public function __construct(
         protected array $licenses,
         protected string $packageName,
-        protected HttpClientInterface|null $httpClient = null,
-        protected PluginRegistryInterface|null $pluginRegistry = null
+        protected HttpClientInterface|null $httpClient = null
     ) {
         $this->licenseFile = dirname(App::instance()->root('license')) . '/' . static::LICENSE_FILE;
         $this->httpClient = $httpClient ?? new KirbyHttpClient();
-        $this->pluginRegistry = $pluginRegistry ?? new KirbyPluginRegistry();
     }
 
     public static function read(string $packageName, array $options = []): static
@@ -61,8 +57,7 @@ class Licenses
         $instance = new static(
             licenses: $licenses,
             packageName: $packageName,
-            httpClient: $options['httpClient'] ?? null,
-            pluginRegistry: $options['pluginRegistry'] ?? null
+            httpClient: $options['httpClient'] ?? null
         );
         $instance->migration();
         $instance->refresh();
@@ -131,7 +126,10 @@ class Licenses
 
     public function getPluginVersion(): string|null
     {
-        return $this->pluginRegistry->getPluginVersion($this->packageName);
+        // Map package name to Kirby plugin name by removing the vendor prefix
+        $kirbyPluginName = str_replace('/kirby-', '/', $this->packageName);
+
+        return App::plugin($kirbyPluginName)?->version();
     }
 
     public function isActivated(): bool
