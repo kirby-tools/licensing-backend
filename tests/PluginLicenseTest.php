@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use JohannSchopplich\Licensing\Licenses;
 use JohannSchopplich\Licensing\PluginLicense;
 use Kirby\Cms\App;
 use Kirby\Plugin\License as KirbyLicense;
@@ -11,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 class PluginLicenseTest extends TestCase
 {
-    public const LICENSE_FILE = __DIR__ . '/.kirby-tools-licenses';
+    public const LICENSE_FILE_PATH = __DIR__ . '/' . Licenses::LICENSE_FILE;
 
     private App $kirby;
     private Plugin $plugin;
@@ -31,8 +32,8 @@ class PluginLicenseTest extends TestCase
 
     protected function tearDown(): void
     {
-        if (file_exists(static::LICENSE_FILE)) {
-            unlink(static::LICENSE_FILE);
+        if (file_exists(static::LICENSE_FILE_PATH)) {
+            unlink(static::LICENSE_FILE_PATH);
         }
 
         App::destroy();
@@ -161,7 +162,7 @@ class PluginLicenseTest extends TestCase
 
     public function testConstructorWithActiveLicense(): void
     {
-        file_put_contents(static::LICENSE_FILE, json_encode([
+        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
                 'licenseCompatibility' => '^1.0.0',

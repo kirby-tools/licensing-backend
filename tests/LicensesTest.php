@@ -3,12 +3,14 @@
 declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\Licenses;
+use JohannSchopplich\Licensing\Plugin\PluginRegistryInterface;
 use Kirby\Cms\App;
+use Kirby\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 class LicensesTest extends TestCase
 {
-    public const LICENSE_FILE = __DIR__ . '/.kirby-tools-licenses';
+    public const LICENSE_FILE_PATH = __DIR__ . '/' . Licenses::LICENSE_FILE;
 
     private App $kirby;
 
@@ -21,7 +23,6 @@ class LicensesTest extends TestCase
             ]
         ]);
 
-        // Register a mock plugin for testing
         $mockPlugin = $this->createMock(\Kirby\Plugin\Plugin::class);
         $mockPlugin->method('version')->willReturn('1.0.0');
 
@@ -34,8 +35,8 @@ class LicensesTest extends TestCase
 
     protected function tearDown(): void
     {
-        if (file_exists(static::LICENSE_FILE)) {
-            unlink(static::LICENSE_FILE);
+        if (file_exists(static::LICENSE_FILE_PATH)) {
+            unlink(static::LICENSE_FILE_PATH);
         }
 
         App::destroy();
@@ -53,7 +54,10 @@ class LicensesTest extends TestCase
 
     public function testIsValidLicenseKey(): void
     {
-        $licenses = new Licenses([], 'test/package');
+        $licenses = new Licenses(
+            licenses: [],
+            packageName: 'test/package'
+        );
 
         $this->assertTrue($licenses->isValid('KT1-ABC123-DEF456'));
         $this->assertTrue($licenses->isValid('KT999-XYZ789-ABC123'));
@@ -64,54 +68,72 @@ class LicensesTest extends TestCase
 
     public function testGetLicenseVersion(): void
     {
-        $licenses = new Licenses([
-            'test/package' => [
-                'licenseKey' => 'KT1-ABC123-DEF456',
-                'licenseCompatibility' => '^1.0.0'
-            ]
-        ], 'test/package');
+        $licenses = new Licenses(
+            licenses: [
+                'test/package' => [
+                    'licenseKey' => 'KT1-ABC123-DEF456',
+                    'licenseCompatibility' => '^1.0.0'
+                ]
+            ],
+            packageName: 'test/package'
+        );
 
         $this->assertEquals(1, $licenses->getLicenseVersion());
 
-        $licenses = new Licenses([
-            'test/package' => [
-                'licenseKey' => 'KT999-ABC123-DEF456',
-                'licenseCompatibility' => '^1.0.0'
-            ]
-        ], 'test/package');
+        $licenses = new Licenses(
+            licenses: [
+                'test/package' => [
+                    'licenseKey' => 'KT999-ABC123-DEF456',
+                    'licenseCompatibility' => '^1.0.0'
+                ]
+            ],
+            packageName: 'test/package'
+        );
 
         $this->assertEquals(999, $licenses->getLicenseVersion());
     }
 
     public function testGetLicenseVersionWithInvalidKey(): void
     {
-        $licenses = new Licenses([
-            'test/package' => [
-                'licenseKey' => 'INVALID-KEY',
-                'licenseCompatibility' => '^1.0.0'
-            ]
-        ], 'test/package');
+        $licenses = new Licenses(
+            licenses: [
+                'test/package' => [
+                    'licenseKey' => 'INVALID-KEY',
+                    'licenseCompatibility' => '^1.0.0'
+                ]
+            ],
+            packageName: 'test/package'
+        );
 
         $this->assertNull($licenses->getLicenseVersion());
     }
 
     public function testGetStatus(): void
     {
-        $licenses = new Licenses([], 'test/package');
+        $licenses = new Licenses(
+            licenses: [],
+            packageName: 'test/package'
+        );
         $this->assertEquals('inactive', $licenses->getStatus());
 
-        $licenses = new Licenses([
-            'test/package' => [
-                'licenseKey' => 'INVALID-KEY',
-                'licenseCompatibility' => '^1.0.0'
-            ]
-        ], 'test/package');
+        $licenses = new Licenses(
+            licenses: [
+                'test/package' => [
+                    'licenseKey' => 'INVALID-KEY',
+                    'licenseCompatibility' => '^1.0.0'
+                ]
+            ],
+            packageName: 'test/package'
+        );
         $this->assertEquals('invalid', $licenses->getStatus());
     }
 
     public function testIsUpgradeable(): void
     {
-        $licenses = new Licenses([], 'test/package');
+        $licenses = new Licenses(
+            licenses: [],
+            packageName: 'test/package'
+        );
 
         $this->assertFalse($licenses->isUpgradeable(null));
         $this->assertFalse($licenses->isUpgradeable(''));
@@ -121,18 +143,77 @@ class LicensesTest extends TestCase
 
     public function testActivateThrowsExceptionWhenAlreadyActivated(): void
     {
-        // Skip this test for now due to complexity of mocking HTTP and plugin registration
-        $this->markTestSkipped('Requires mocking, to be implemented later');
+        $mockPluginRegistry = $this->createMock(PluginRegistryInterface::class);
+        $mockPluginRegistry->method('getPluginVersion')
+            ->with('test/package')
+            ->willReturn('1.0.0');
+
+        // Create a licenses instance with an already activated license
+        $licenses = new Licenses(
+            licenses: [
+                'test/package' => [
+                    'licenseKey' => 'KT1-ABC123-DEF456',
+                    'licenseCompatibility' => '^1.0.0'
+                ]
+            ],
+            packageName: 'test/package',
+            httpClient: null,
+            pluginRegistry: $mockPluginRegistry
+        );
+
+        $this->expectException(\Kirby\Exception\LogicException::class);
+        $this->expectExceptionMessage('License key already activated');
+
+        $licenses->activate('test@example.com', '123456');
+    }
+
+    public function testActivateFromRequestMissingEmail(): void
+    {
+        $licenses = new Licenses(
+            licenses: [],
+            packageName: 'test/package'
+        );
+
+        // Create a request that's missing email
+        $request = new Request([
+            'body' => ['orderId' => '123456']
+        ]);
+
+        $this->expectException(\Kirby\Exception\LogicException::class);
+        $this->expectExceptionMessage('Missing license registration parameters "email" or "orderId"');
+
+        $licenses->activateFromRequest($request);
+    }
+
+    public function testActivateFromRequestMissingOrderId(): void
+    {
+        $licenses = new Licenses(
+            licenses: [],
+            packageName: 'test/package'
+        );
+
+        // Create a request that's missing orderId
+        $request = new Request([
+            'body' => ['email' => 'test@example.com']
+        ]);
+
+        $this->expectException(\Kirby\Exception\LogicException::class);
+        $this->expectExceptionMessage('Missing license registration parameters "email" or "orderId"');
+
+        $licenses->activateFromRequest($request);
     }
 
     public function testGetLicenseReturnsArrayWhenActivated(): void
     {
-        $licenses = new Licenses([
-            'test/package' => [
-                'licenseKey' => 'KT1-ABC123-DEF456',
-                'licenseCompatibility' => '^1.0.0'
-            ]
-        ], 'test/package');
+        $licenses = new Licenses(
+            licenses: [
+                'test/package' => [
+                    'licenseKey' => 'KT1-ABC123-DEF456',
+                    'licenseCompatibility' => '^1.0.0'
+                ]
+            ],
+            packageName: 'test/package'
+        );
 
         $mockPlugin = $this->createMock(\Kirby\Plugin\Plugin::class);
         $mockPlugin->method('version')->willReturn('1.0.0');
@@ -157,9 +238,12 @@ class LicensesTest extends TestCase
 
     public function testUpdate(): void
     {
-        file_put_contents(static::LICENSE_FILE, '{}');
+        file_put_contents(static::LICENSE_FILE_PATH, '{}');
 
-        $licenses = new Licenses([], 'test/package');
+        $licenses = new Licenses(
+            licenses: [],
+            packageName: 'test/package'
+        );
 
         $mockPlugin = $this->createMock(\Kirby\Plugin\Plugin::class);
         $mockPlugin->method('version')->willReturn('1.0.0');
@@ -186,7 +270,10 @@ class LicensesTest extends TestCase
 
     public function testIsCompatible(): void
     {
-        $licenses = new Licenses([], 'test/package');
+        $licenses = new Licenses(
+            licenses: [],
+            packageName: 'test/package'
+        );
 
         // Since the plugin is not found, it should return `false` for all version constraints
         $this->assertFalse($licenses->isCompatible('^1.0.0'));

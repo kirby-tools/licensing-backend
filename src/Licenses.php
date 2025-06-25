@@ -5,12 +5,15 @@ declare(strict_types = 1);
 namespace JohannSchopplich\Licensing;
 
 use Composer\Semver\Semver;
+use JohannSchopplich\Licensing\Http\HttpClientInterface;
+use JohannSchopplich\Licensing\Http\KirbyHttpClient;
+use JohannSchopplich\Licensing\Plugin\KirbyPluginRegistry;
+use JohannSchopplich\Licensing\Plugin\PluginRegistryInterface;
 use Kirby\Cms\App;
 use Kirby\Data\Json;
 use Kirby\Exception\LogicException;
 use Kirby\Filesystem\F;
-use Kirby\Http\Remote;
-use Kirby\Toolkit\A;
+use Kirby\Http\Request;
 use Throwable;
 
 /**
@@ -30,16 +33,21 @@ use Throwable;
  */
 class Licenses
 {
-    private const LICENSE_FILE = '.kirby-tools-licenses';
-    private const LICENSE_PATTERN = '!^KT(\d+)-\w+-\w+$!';
-    private const API_URL = 'https://repo.kirby.tools/api';
-    private string $licenseFile;
+    protected const LICENSE_PATTERN = '!^KT(\d+)-\w+-\w+$!';
+    protected const API_URL = 'https://repo.kirby.tools/api';
+    protected string $licenseFile;
+
+    public const LICENSE_FILE = '.kirby-tools-licenses';
 
     public function __construct(
-        private array $licenses,
-        private string $packageName,
+        protected array $licenses,
+        protected string $packageName,
+        protected HttpClientInterface|null $httpClient = null,
+        protected PluginRegistryInterface|null $pluginRegistry = null
     ) {
         $this->licenseFile = dirname(App::instance()->root('license')) . '/' . static::LICENSE_FILE;
+        $this->httpClient = $httpClient ?? new KirbyHttpClient();
+        $this->pluginRegistry = $pluginRegistry ?? new KirbyPluginRegistry();
     }
 
     public static function read(string $packageName, array $options = []): static
@@ -50,7 +58,12 @@ class Licenses
             $licenses = [];
         }
 
-        $instance = new static($licenses, $packageName);
+        $instance = new static(
+            licenses: $licenses,
+            packageName: $packageName,
+            httpClient: $options['httpClient'] ?? null,
+            pluginRegistry: $options['pluginRegistry'] ?? null
+        );
         $instance->migration();
         $instance->refresh();
 
@@ -118,8 +131,7 @@ class Licenses
 
     public function getPluginVersion(): string|null
     {
-        $kirbyPackageName = str_replace('/kirby-', '/', $this->packageName);
-        return App::instance()->plugin($kirbyPackageName)?->version();
+        return $this->pluginRegistry->getPluginVersion($this->packageName);
     }
 
     public function isActivated(): bool
@@ -208,9 +220,9 @@ class Licenses
         $this->update($this->packageName, $response);
     }
 
-    public function activateFromRequest(): array
+    public function activateFromRequest(Request|null $request = null): array
     {
-        $request = App::instance()->request();
+        $request = $request ?? App::instance()->request();
         $email = $request->get('email');
         $orderId = $request->get('orderId');
 
@@ -239,7 +251,7 @@ class Licenses
         Json::write($this->licenseFile, $this->licenses);
     }
 
-    private function migration(): void
+    protected function migration(): void
     {
         // Migration 1: Move license file to license directory
         $oldLicenseFile = App::instance()->root('config') . '/' . static::LICENSE_FILE;
@@ -255,7 +267,7 @@ class Licenses
         }
     }
 
-    private function refresh(): void
+    protected function refresh(): void
     {
         $currentVersion = $this->licenses[$this->packageName]['pluginVersion'] ?? null;
 
@@ -269,19 +281,8 @@ class Licenses
         }
     }
 
-    private function request(string $path, array $options = []): array
+    protected function request(string $path, array $options = []): array
     {
-        $response = new Remote(static::API_URL . '/' . $path, A::merge([
-            'headers' => [
-                'X-App-Url' => App::instance()->url()
-            ]
-        ], $options));
-
-        if ($response->code() < 200 || $response->code() >= 300) {
-            $message = $response->json()['message'] ?? 'Request failed';
-            throw new LogicException($message, (string)$response->code());
-        }
-
-        return $response->json();
+        return $this->httpClient->request(static::API_URL . '/' . $path, $options);
     }
 }
