@@ -129,7 +129,7 @@ class Licenses
         // Map package name to Kirby plugin name by removing the vendor prefix
         $kirbyPluginName = str_replace('/kirby-', '/', $this->packageName);
 
-        return App::plugin($kirbyPluginName)?->version();
+        return App::instance()->plugin($kirbyPluginName)?->version();
     }
 
     public function isActivated(): bool
