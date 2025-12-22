@@ -49,7 +49,7 @@ class PluginLicenseTest extends TestCase
 
     public function testPluginLicenseConstants(): void
     {
-        $this->assertEquals('Kirby Tools License', PluginLicense::LICENSE_NAME);
+        $this->assertEquals('Kirby Tools Plugin License', PluginLicense::LICENSE_NAME);
         $this->assertEquals('https://kirby.tools/license', PluginLicense::LICENSE_URL);
     }
 
@@ -57,7 +57,6 @@ class PluginLicenseTest extends TestCase
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('mapToKirbyStatus');
-        $method->setAccessible(true);
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
         $status = $method->invoke($pluginLicense, 'active');
@@ -73,7 +72,6 @@ class PluginLicenseTest extends TestCase
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('mapToKirbyStatus');
-        $method->setAccessible(true);
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
         $status = $method->invoke($pluginLicense, 'inactive');
@@ -89,7 +87,6 @@ class PluginLicenseTest extends TestCase
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('mapToKirbyStatus');
-        $method->setAccessible(true);
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
         $status = $method->invoke($pluginLicense, 'invalid');
@@ -105,7 +102,6 @@ class PluginLicenseTest extends TestCase
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('mapToKirbyStatus');
-        $method->setAccessible(true);
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
         $status = $method->invoke($pluginLicense, 'incompatible');
@@ -121,7 +117,6 @@ class PluginLicenseTest extends TestCase
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('mapToKirbyStatus');
-        $method->setAccessible(true);
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
         $status = $method->invoke($pluginLicense, 'upgradeable');
@@ -137,7 +132,6 @@ class PluginLicenseTest extends TestCase
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('mapToKirbyStatus');
-        $method->setAccessible(true);
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
         $status = $method->invoke($pluginLicense, 'unknown_status');
@@ -155,7 +149,6 @@ class PluginLicenseTest extends TestCase
 
         $reflection = new ReflectionClass($pluginLicense);
         $packageNameProperty = $reflection->getProperty('packageName');
-        $packageNameProperty->setAccessible(true);
 
         $this->assertEquals('test/package', $packageNameProperty->getValue($pluginLicense));
     }
