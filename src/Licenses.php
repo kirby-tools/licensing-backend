@@ -98,7 +98,7 @@ class Licenses
 
         return [
             'key' => $this->getLicenseKey(),
-            'version' => $this->getLicenseVersion(),
+            'generation' => $this->getLicenseGeneration(),
             'compatibility' => $this->getLicenseCompatibility()
         ];
     }
@@ -108,7 +108,7 @@ class Licenses
         return $this->licenses[$this->packageName]['licenseKey'] ?? null;
     }
 
-    public function getLicenseVersion(): int|null
+    public function getLicenseGeneration(): int|null
     {
         $licenseKey = $this->getLicenseKey();
 

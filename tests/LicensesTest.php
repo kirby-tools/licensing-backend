@@ -65,7 +65,7 @@ class LicensesTest extends TestCase
         $this->assertFalse($licenses->isValid(null));
     }
 
-    public function testGetLicenseVersion(): void
+    public function testGetLicenseGeneration(): void
     {
         $licenses = new Licenses(
             licenses: [
@@ -77,7 +77,7 @@ class LicensesTest extends TestCase
             packageName: 'test/package'
         );
 
-        $this->assertEquals(1, $licenses->getLicenseVersion());
+        $this->assertEquals(1, $licenses->getLicenseGeneration());
 
         $licenses = new Licenses(
             licenses: [
@@ -89,10 +89,10 @@ class LicensesTest extends TestCase
             packageName: 'test/package'
         );
 
-        $this->assertEquals(999, $licenses->getLicenseVersion());
+        $this->assertEquals(999, $licenses->getLicenseGeneration());
     }
 
-    public function testGetLicenseVersionWithInvalidKey(): void
+    public function testGetLicenseGenerationWithInvalidKey(): void
     {
         $licenses = new Licenses(
             licenses: [
@@ -104,7 +104,7 @@ class LicensesTest extends TestCase
             packageName: 'test/package'
         );
 
-        $this->assertNull($licenses->getLicenseVersion());
+        $this->assertNull($licenses->getLicenseGeneration());
     }
 
     public function testGetStatus(): void
@@ -229,7 +229,7 @@ class LicensesTest extends TestCase
         if ($licenses->isActivated()) {
             $this->assertIsArray($license);
             $this->assertArrayHasKey('key', $license);
-            $this->assertArrayHasKey('version', $license);
+            $this->assertArrayHasKey('generation', $license);
             $this->assertArrayHasKey('compatibility', $license);
         } else {
             $this->assertFalse($license);
