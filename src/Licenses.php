@@ -59,7 +59,6 @@ class Licenses
             packageName: $packageName,
             httpClient: $options['httpClient'] ?? null
         );
-        $instance->migration();
         $instance->refresh();
 
         return $instance;
@@ -247,22 +246,6 @@ class Licenses
         ];
 
         Json::write($this->licenseFile, $this->licenses);
-    }
-
-    protected function migration(): void
-    {
-        // Migration 1: Move license file to license directory
-        $oldLicenseFile = App::instance()->root('config') . '/' . static::LICENSE_FILE;
-        if (F::exists($oldLicenseFile) && $oldLicenseFile !== $this->licenseFile) {
-            F::move($oldLicenseFile, $this->licenseFile);
-            $this->licenses = Json::read($this->licenseFile);
-        }
-
-        // Migration 2: If license value is a string, re-fetch license data from API
-        if (is_string($this->licenses[$this->packageName] ?? null)) {
-            $response = $this->request('licenses/' . $this->licenses[$this->packageName] . '/package');
-            $this->update($this->packageName, $response);
-        }
     }
 
     protected function refresh(): void
