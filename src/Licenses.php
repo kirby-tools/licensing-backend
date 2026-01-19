@@ -10,7 +10,6 @@ use JohannSchopplich\Licensing\Http\KirbyHttpClient;
 use Kirby\Cms\App;
 use Kirby\Data\Json;
 use Kirby\Exception\LogicException;
-use Kirby\Filesystem\F;
 use Kirby\Http\Request;
 use Throwable;
 
@@ -69,34 +68,36 @@ class Licenses
         $licenseKey = $this->getLicenseKey();
 
         if ($licenseKey === null) {
-            return 'inactive';
+            return LicenseStatus::INACTIVE;
         }
 
         if (!$this->isValid($licenseKey)) {
-            return 'invalid';
+            return LicenseStatus::INVALID;
         }
 
         $compatibility = $this->getLicenseCompatibility();
 
         if ($this->isCompatible($compatibility)) {
-            return 'active';
+            return LicenseStatus::ACTIVE;
         }
 
         if ($this->isUpgradeable($compatibility)) {
-            return 'upgradeable';
+            return LicenseStatus::UPGRADEABLE;
         }
 
-        return 'incompatible';
+        return LicenseStatus::INCOMPATIBLE;
     }
 
-    public function getLicense(): array|bool
+    public function getLicense(): array|null
     {
-        if (!$this->isActivated()) {
-            return false;
+        $licenseKey = $this->getLicenseKey();
+
+        if ($licenseKey === null || !$this->isValid($licenseKey)) {
+            return null;
         }
 
         return [
-            'key' => $this->getLicenseKey(),
+            'key' => $licenseKey,
             'generation' => $this->getLicenseGeneration(),
             'compatibility' => $this->getLicenseCompatibility()
         ];

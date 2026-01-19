@@ -3,6 +3,7 @@
 declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\Licenses;
+use JohannSchopplich\Licensing\LicenseStatus;
 use Kirby\Cms\App;
 use Kirby\Http\Request;
 use PHPUnit\Framework\TestCase;
@@ -46,9 +47,9 @@ class LicensesTest extends TestCase
         $licenses = Licenses::read('test/package');
 
         $this->assertInstanceOf(Licenses::class, $licenses);
-        $this->assertEquals('inactive', $licenses->getStatus());
+        $this->assertEquals(LicenseStatus::INACTIVE, $licenses->getStatus());
         $this->assertNull($licenses->getLicenseKey());
-        $this->assertFalse($licenses->getLicense());
+        $this->assertNull($licenses->getLicense());
     }
 
     public function testIsValidLicenseKey(): void
@@ -113,7 +114,7 @@ class LicensesTest extends TestCase
             licenses: [],
             packageName: 'test/package'
         );
-        $this->assertEquals('inactive', $licenses->getStatus());
+        $this->assertEquals(LicenseStatus::INACTIVE, $licenses->getStatus());
 
         $licenses = new Licenses(
             licenses: [
@@ -124,7 +125,7 @@ class LicensesTest extends TestCase
             ],
             packageName: 'test/package'
         );
-        $this->assertEquals('invalid', $licenses->getStatus());
+        $this->assertEquals(LicenseStatus::INVALID, $licenses->getStatus());
     }
 
     public function testIsUpgradeable(): void
@@ -203,7 +204,7 @@ class LicensesTest extends TestCase
         $licenses->activateFromRequest($request);
     }
 
-    public function testGetLicenseReturnsArrayWhenActivated(): void
+    public function testGetLicenseReturnsArrayWithValidKey(): void
     {
         $licenses = new Licenses(
             licenses: [
@@ -215,25 +216,27 @@ class LicensesTest extends TestCase
             packageName: 'test/package'
         );
 
-        $mockPlugin = $this->createMock(\Kirby\Plugin\Plugin::class);
-        $mockPlugin->method('version')->willReturn('1.0.0');
-
-        $this->kirby->extend([
-            'plugins' => [
-                'test/package' => $mockPlugin
-            ]
-        ]);
-
         $license = $licenses->getLicense();
 
-        if ($licenses->isActivated()) {
-            $this->assertIsArray($license);
-            $this->assertArrayHasKey('key', $license);
-            $this->assertArrayHasKey('generation', $license);
-            $this->assertArrayHasKey('compatibility', $license);
-        } else {
-            $this->assertFalse($license);
-        }
+        $this->assertIsArray($license);
+        $this->assertArrayHasKey('key', $license);
+        $this->assertArrayHasKey('generation', $license);
+        $this->assertArrayHasKey('compatibility', $license);
+    }
+
+    public function testGetLicenseReturnsNullWithInvalidKey(): void
+    {
+        $licenses = new Licenses(
+            licenses: [
+                'test/package' => [
+                    'licenseKey' => 'INVALID-KEY',
+                    'licenseCompatibility' => '^1.0.0'
+                ]
+            ],
+            packageName: 'test/package'
+        );
+
+        $this->assertNull($licenses->getLicense());
     }
 
     public function testUpdate(): void

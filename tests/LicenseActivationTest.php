@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\Http\HttpClientInterface;
 use JohannSchopplich\Licensing\Licenses;
+use JohannSchopplich\Licensing\LicenseStatus;
 use Kirby\Cms\App;
 use Kirby\Exception\LogicException;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -67,7 +68,7 @@ class LicenseActivationTest extends TestCase
 
         $this->assertEquals('KT1-ABC123-DEF456', $licenses->getLicenseKey());
         $this->assertEquals('^1.0.0', $licenses->getLicenseCompatibility());
-        $this->assertEquals('active', $licenses->getStatus());
+        $this->assertEquals(LicenseStatus::ACTIVE, $licenses->getStatus());
     }
 
     public function testActivateWithWrongPackageName(): void
@@ -192,7 +193,7 @@ class LicenseActivationTest extends TestCase
 
         $this->assertEquals('KT1-ABC123-DEF456', $licenses->getLicenseKey());
         $this->assertEquals('^1.0.0', $licenses->getLicenseCompatibility());
-        $this->assertEquals('active', $licenses->getStatus());
+        $this->assertEquals(LicenseStatus::ACTIVE, $licenses->getStatus());
     }
 
     public function testActivationUpdatesLicenseFile(): void
