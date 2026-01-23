@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace JohannSchopplich\Licensing;
 
+use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Toolkit\I18n;
 use Throwable;
@@ -56,12 +57,12 @@ class PluginLicenseExtensions
     public static function dialogs(string $packageName, string $pluginLabel): array
     {
         $dialogPrefix = static::toPackageSlug($packageName);
-        $pluginSlug = static::toPluginId($packageName);
+        $pluginId = static::toPluginId($packageName);
 
         return [
             // License info dialog (for active/upgradeable/incompatible licenses)
             "{$dialogPrefix}/license" => [
-                'load' => function () use ($packageName, $pluginSlug, $pluginLabel) {
+                'load' => function () use ($packageName, $pluginId, $pluginLabel) {
                     $licenses = Licenses::read($packageName);
                     $license = $licenses->getLicense();
                     $status = $licenses->getStatus();
@@ -106,7 +107,7 @@ class PluginLicenseExtensions
                             'icon' => 'open',
                             'text' => I18n::translate('kirby-tools.license.info.upgrade'),
                             'theme' => 'love',
-                            'link' => 'https://kirby.tools/' . $pluginSlug . '/buy',
+                            'link' => 'https://kirby.tools/' . $pluginId . '/buy',
                             'target' => '_blank'
                         ] : [
                             'icon' => 'open',
@@ -115,6 +116,9 @@ class PluginLicenseExtensions
                             'link' => 'https://hub.kirby.tools',
                             'target' => '_blank'
                         ];
+
+                    $kirbyPluginName = str_replace('/kirby-', '/', $packageName);
+                    $pluginVersion = App::instance()->plugin($kirbyPluginName)?->version() ?? '-';
 
                     return [
                         'component' => 'k-form-dialog',
@@ -134,9 +138,12 @@ class PluginLicenseExtensions
                                             'theme' => $statusTheme
                                         ],
                                         [
-                                            'label' => I18n::translate('kirby-tools.license.info.compatibility'),
-                                            'value' => $versions,
-                                            'icon' => 'layers'
+                                            'label' => I18n::translate('kirby-tools.license.info.version'),
+                                            'value' => 'v' . $pluginVersion,
+                                            'icon' => 'tag',
+                                            'info' => I18n::template('kirby-tools.license.info.licenseCompatibility', ['versions' => $versions]),
+                                            'link' => 'https://kirby.tools/' . $pluginId . '/changelog',
+                                            'target' => '_blank'
                                         ]
                                     ]
                                 ]
@@ -216,7 +223,8 @@ class PluginLicenseExtensions
                 'kirby-tools.license.activate.submit' => 'Activate License',
 
                 'kirby-tools.license.info.key' => 'License Key',
-                'kirby-tools.license.info.compatibility' => 'Compatibility',
+                'kirby-tools.license.info.version' => 'Version',
+                'kirby-tools.license.info.licenseCompatibility' => 'License covers {versions}',
                 'kirby-tools.license.info.status' => 'Status',
                 'kirby-tools.license.info.status.active' => 'Active',
                 'kirby-tools.license.info.status.upgradeable' => 'Upgrade available',
@@ -245,7 +253,8 @@ class PluginLicenseExtensions
                 'kirby-tools.license.activate.submit' => 'Lizenz aktivieren',
 
                 'kirby-tools.license.info.key' => 'Lizenzschlüssel',
-                'kirby-tools.license.info.compatibility' => 'Kompatibilität',
+                'kirby-tools.license.info.version' => 'Version',
+                'kirby-tools.license.info.licenseCompatibility' => 'Lizenz gilt für {versions}',
                 'kirby-tools.license.info.status' => 'Status',
                 'kirby-tools.license.info.status.active' => 'Aktiv',
                 'kirby-tools.license.info.status.upgradeable' => 'Upgrade verfügbar',
@@ -274,7 +283,8 @@ class PluginLicenseExtensions
                 'kirby-tools.license.activate.submit' => 'Activer la licence',
 
                 'kirby-tools.license.info.key' => 'Clé de licence',
-                'kirby-tools.license.info.compatibility' => 'Compatibilité',
+                'kirby-tools.license.info.version' => 'Version',
+                'kirby-tools.license.info.licenseCompatibility' => 'Licence couvre {versions}',
                 'kirby-tools.license.info.status' => 'Statut',
                 'kirby-tools.license.info.status.active' => 'Active',
                 'kirby-tools.license.info.status.upgradeable' => 'Mise à niveau disponible',
@@ -303,7 +313,8 @@ class PluginLicenseExtensions
                 'kirby-tools.license.activate.submit' => 'Licentie activeren',
 
                 'kirby-tools.license.info.key' => 'Licentiesleutel',
-                'kirby-tools.license.info.compatibility' => 'Compatibiliteit',
+                'kirby-tools.license.info.version' => 'Versie',
+                'kirby-tools.license.info.licenseCompatibility' => 'Licentie geldt voor {versions}',
                 'kirby-tools.license.info.status' => 'Status',
                 'kirby-tools.license.info.status.active' => 'Actief',
                 'kirby-tools.license.info.status.upgradeable' => 'Upgrade beschikbaar',
@@ -332,7 +343,8 @@ class PluginLicenseExtensions
                 'kirby-tools.license.activate.submit' => 'Activar licencia',
 
                 'kirby-tools.license.info.key' => 'Clave de licencia',
-                'kirby-tools.license.info.compatibility' => 'Compatibilidad',
+                'kirby-tools.license.info.version' => 'Versión',
+                'kirby-tools.license.info.licenseCompatibility' => 'Licencia cubre {versions}',
                 'kirby-tools.license.info.status' => 'Estado',
                 'kirby-tools.license.info.status.active' => 'Activa',
                 'kirby-tools.license.info.status.upgradeable' => 'Actualización disponible',
@@ -361,7 +373,8 @@ class PluginLicenseExtensions
                 'kirby-tools.license.activate.submit' => 'Attiva licenza',
 
                 'kirby-tools.license.info.key' => 'Chiave di licenza',
-                'kirby-tools.license.info.compatibility' => 'Compatibilità',
+                'kirby-tools.license.info.version' => 'Versione',
+                'kirby-tools.license.info.licenseCompatibility' => 'Licenza copre {versions}',
                 'kirby-tools.license.info.status' => 'Stato',
                 'kirby-tools.license.info.status.active' => 'Attiva',
                 'kirby-tools.license.info.status.upgradeable' => 'Aggiornamento disponibile',
@@ -388,7 +401,7 @@ class PluginLicenseExtensions
     }
 
     /**
-     * Extracts plugin slug from package name (e.g., `johannschopplich/kirby-copilot` → `copilot`)
+     * Extracts plugin ID from package name (e.g., `johannschopplich/kirby-copilot` → `copilot`)
      */
     public static function toPluginId(string $packageName): string
     {
