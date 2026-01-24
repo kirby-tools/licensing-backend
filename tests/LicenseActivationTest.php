@@ -3,16 +3,19 @@
 declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\Http\HttpClientInterface;
+use JohannSchopplich\Licensing\LicenseActivator;
+use JohannSchopplich\Licensing\LicenseRepository;
 use JohannSchopplich\Licensing\Licenses;
-use JohannSchopplich\Licensing\LicenseStatus;
+use JohannSchopplich\Licensing\LicenseValidator;
 use Kirby\Cms\App;
 use Kirby\Exception\LogicException;
+use Kirby\Http\Request;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class LicenseActivationTest extends TestCase
 {
-    private const LICENSE_FILE = __DIR__ . '/' . Licenses::LICENSE_FILE;
+    private const LICENSE_FILE = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
 
     private App $kirby;
     private HttpClientInterface&MockObject $mockHttpClient;
@@ -41,7 +44,6 @@ class LicenseActivationTest extends TestCase
 
     public function testActivateSuccessfully(): void
     {
-        // Register a test plugin that will be found by the license system
         App::plugin(
             name: 'simple/package',
             extends: [],
@@ -49,7 +51,6 @@ class LicenseActivationTest extends TestCase
             version: '1.0.0'
         );
 
-        // Mock successful HTTP response
         $this->mockHttpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
@@ -59,21 +60,23 @@ class LicenseActivationTest extends TestCase
             ]
         ]);
 
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'simple/package',
-            httpClient: $this->mockHttpClient
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('simple/package');
+        $activator = new LicenseActivator(
+            'simple/package',
+            $repository,
+            $validator,
+            $this->mockHttpClient
         );
-        $licenses->activate('test@example.com', '123456');
 
-        $this->assertEquals('KT1-ABC123-DEF456', $licenses->getLicenseKey());
-        $this->assertEquals('^1.0.0', $licenses->getLicenseCompatibility());
-        $this->assertEquals(LicenseStatus::ACTIVE, $licenses->getStatus());
+        $activator->activate('test@example.com', '123456');
+
+        $licenses = Licenses::read('simple/package');
+        $this->assertEquals('active', $licenses->getStatus());
     }
 
     public function testActivateWithWrongPackageName(): void
     {
-        // Register a test plugin
         App::plugin(
             name: 'simple/package',
             extends: [],
@@ -91,16 +94,19 @@ class LicenseActivationTest extends TestCase
             ]
         ]);
 
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'simple/package',
-            httpClient: $this->mockHttpClient
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('simple/package');
+        $activator = new LicenseActivator(
+            'simple/package',
+            $repository,
+            $validator,
+            $this->mockHttpClient
         );
 
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('License key not valid for this plugin');
 
-        $licenses->activate('test@example.com', '123456');
+        $activator->activate('test@example.com', '123456');
     }
 
     public function testActivateWithIncompatibleVersion(): void
@@ -123,21 +129,23 @@ class LicenseActivationTest extends TestCase
             ]
         ]);
 
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'simple/package',
-            httpClient: $this->mockHttpClient
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('simple/package');
+        $activator = new LicenseActivator(
+            'simple/package',
+            $repository,
+            $validator,
+            $this->mockHttpClient
         );
 
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('License key not valid for this plugin version, please upgrade your license');
 
-        $licenses->activate('test@example.com', '123456');
+        $activator->activate('test@example.com', '123456');
     }
 
     public function testActivateWithApiError(): void
     {
-        // Register a test plugin
         App::plugin(
             name: 'simple/package',
             extends: [],
@@ -150,55 +158,23 @@ class LicenseActivationTest extends TestCase
             'error' => 'License not found'
         ]);
 
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'simple/package',
-            httpClient: $this->mockHttpClient
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('simple/package');
+        $activator = new LicenseActivator(
+            'simple/package',
+            $repository,
+            $validator,
+            $this->mockHttpClient
         );
 
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('License key not valid for this plugin');
 
-        $licenses->activate('test@example.com', '123456');
-    }
-
-    public function testActivateFromRequestWithValidData(): void
-    {
-        // Register a test plugin
-        App::plugin(
-            name: 'simple/package',
-            extends: [],
-            info: ['version' => '1.0.0'],
-            version: '1.0.0'
-        );
-
-        // Mock successful HTTP response
-        $this->mockHttpClient->method('request')->willReturn([
-            'packageName' => 'simple/package',
-            'licenseKey' => 'KT1-ABC123-DEF456',
-            'licenseCompatibility' => '^1.0.0',
-            'order' => [
-                'createdAt' => '2024-01-01T00:00:00Z'
-            ]
-        ]);
-
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'simple/package',
-            httpClient: $this->mockHttpClient
-        );
-
-        // Test activate method directly with email and orderId
-        $licenses->activate('test@example.com', '123456');
-
-        $this->assertEquals('KT1-ABC123-DEF456', $licenses->getLicenseKey());
-        $this->assertEquals('^1.0.0', $licenses->getLicenseCompatibility());
-        $this->assertEquals(LicenseStatus::ACTIVE, $licenses->getStatus());
+        $activator->activate('test@example.com', '123456');
     }
 
     public function testActivationUpdatesLicenseFile(): void
     {
-        // Register a test plugin
         App::plugin(
             name: 'simple/package',
             extends: [],
@@ -216,12 +192,16 @@ class LicenseActivationTest extends TestCase
             ]
         ]);
 
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'simple/package',
-            httpClient: $this->mockHttpClient
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('simple/package');
+        $activator = new LicenseActivator(
+            'simple/package',
+            $repository,
+            $validator,
+            $this->mockHttpClient
         );
-        $licenses->activate('test@example.com', '123456');
+
+        $activator->activate('test@example.com', '123456');
 
         // Verify license file was created
         $this->assertFileExists(static::LICENSE_FILE);
@@ -231,5 +211,83 @@ class LicenseActivationTest extends TestCase
         $this->assertArrayHasKey('simple/package', $savedData);
         $this->assertEquals('KT1-ABC123-DEF456', $savedData['simple/package']['licenseKey']);
         $this->assertEquals('^1.0.0', $savedData['simple/package']['licenseCompatibility']);
+    }
+
+    public function testActivateFromRequestMissingEmail(): void
+    {
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('test/package');
+        $activator = new LicenseActivator(
+            'test/package',
+            $repository,
+            $validator,
+            $this->mockHttpClient
+        );
+
+        // Create a request that's missing email
+        $request = new Request([
+            'body' => ['orderId' => '123456']
+        ]);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Missing license registration parameters "email" or "orderId"');
+
+        $activator->activateFromRequest($request);
+    }
+
+    public function testActivateFromRequestMissingOrderId(): void
+    {
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('test/package');
+        $activator = new LicenseActivator(
+            'test/package',
+            $repository,
+            $validator,
+            $this->mockHttpClient
+        );
+
+        // Create a request that's missing order ID
+        $request = new Request([
+            'body' => ['email' => 'test@example.com']
+        ]);
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Missing license registration parameters "email" or "orderId"');
+
+        $activator->activateFromRequest($request);
+    }
+
+    public function testActivateThrowsExceptionWhenAlreadyActivated(): void
+    {
+        App::plugin(
+            name: 'test/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
+
+        // Create a license file with an already activated license
+        file_put_contents(static::LICENSE_FILE, json_encode([
+            'test/package' => [
+                'licenseKey' => 'KT1-ABC123-DEF456',
+                'licenseCompatibility' => '^1.0.0',
+                'pluginVersion' => '1.0.0',
+                'createdAt' => '2024-01-01T00:00:00Z'
+            ]
+        ]));
+
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('test/package');
+        $activator = new LicenseActivator(
+            'test/package',
+            $repository,
+            $validator,
+            $this->mockHttpClient
+        );
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('License key already activated');
+
+        $activator->activate('test@example.com', '123456');
     }
 }

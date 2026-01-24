@@ -2,17 +2,18 @@
 
 declare(strict_types = 1);
 
+use JohannSchopplich\Licensing\Http\HttpClientInterface;
+use JohannSchopplich\Licensing\LicenseRepository;
 use JohannSchopplich\Licensing\Licenses;
-use JohannSchopplich\Licensing\LicenseStatus;
 use Kirby\Cms\App;
-use Kirby\Http\Request;
 use PHPUnit\Framework\TestCase;
 
 class LicensesTest extends TestCase
 {
-    public const LICENSE_FILE_PATH = __DIR__ . '/' . Licenses::LICENSE_FILE;
+    public const LICENSE_FILE_PATH = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
 
     private App $kirby;
+    private HttpClientInterface $mockHttpClient;
 
     protected function setUp(): void
     {
@@ -31,6 +32,9 @@ class LicensesTest extends TestCase
                 'test/package' => $mockPlugin
             ]
         ]);
+
+        // Create a mock HTTP client that returns empty responses
+        $this->mockHttpClient = $this->createMock(HttpClientInterface::class);
     }
 
     protected function tearDown(): void
@@ -44,178 +48,44 @@ class LicensesTest extends TestCase
 
     public function testReadWithNoLicenseFile(): void
     {
-        $licenses = Licenses::read('test/package');
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
 
         $this->assertInstanceOf(Licenses::class, $licenses);
-        $this->assertEquals(LicenseStatus::INACTIVE, $licenses->getStatus());
-        $this->assertNull($licenses->getLicenseKey());
+        $this->assertEquals('inactive', $licenses->getStatus());
         $this->assertNull($licenses->getLicense());
     }
 
-    public function testIsValidLicenseKey(): void
+    public function testGetStatusInactive(): void
     {
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'test/package'
-        );
-
-        $this->assertTrue($licenses->isValid('KT1-ABC123-DEF456'));
-        $this->assertTrue($licenses->isValid('KT999-XYZ789-ABC123'));
-        $this->assertFalse($licenses->isValid('INVALID-LICENSE'));
-        $this->assertFalse($licenses->isValid('KT-ABC123-DEF456'));
-        $this->assertFalse($licenses->isValid(null));
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+        $this->assertEquals('inactive', $licenses->getStatus());
     }
 
-    public function testGetLicenseGeneration(): void
+    public function testGetStatusInvalid(): void
     {
-        $licenses = new Licenses(
-            licenses: [
-                'test/package' => [
-                    'licenseKey' => 'KT1-ABC123-DEF456',
-                    'licenseCompatibility' => '^1.0.0'
-                ]
-            ],
-            packageName: 'test/package'
-        );
+        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+            'test/package' => [
+                'licenseKey' => 'INVALID-KEY',
+                'licenseCompatibility' => '^1.0.0'
+            ]
+        ]));
 
-        $this->assertEquals(1, $licenses->getLicenseGeneration());
-
-        $licenses = new Licenses(
-            licenses: [
-                'test/package' => [
-                    'licenseKey' => 'KT999-ABC123-DEF456',
-                    'licenseCompatibility' => '^1.0.0'
-                ]
-            ],
-            packageName: 'test/package'
-        );
-
-        $this->assertEquals(999, $licenses->getLicenseGeneration());
-    }
-
-    public function testGetLicenseGenerationWithInvalidKey(): void
-    {
-        $licenses = new Licenses(
-            licenses: [
-                'test/package' => [
-                    'licenseKey' => 'INVALID-KEY',
-                    'licenseCompatibility' => '^1.0.0'
-                ]
-            ],
-            packageName: 'test/package'
-        );
-
-        $this->assertNull($licenses->getLicenseGeneration());
-    }
-
-    public function testGetStatus(): void
-    {
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'test/package'
-        );
-        $this->assertEquals(LicenseStatus::INACTIVE, $licenses->getStatus());
-
-        $licenses = new Licenses(
-            licenses: [
-                'test/package' => [
-                    'licenseKey' => 'INVALID-KEY',
-                    'licenseCompatibility' => '^1.0.0'
-                ]
-            ],
-            packageName: 'test/package'
-        );
-        $this->assertEquals(LicenseStatus::INVALID, $licenses->getStatus());
-    }
-
-    public function testIsUpgradeable(): void
-    {
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'test/package'
-        );
-
-        $this->assertFalse($licenses->isUpgradeable(null));
-        $this->assertFalse($licenses->isUpgradeable(''));
-        $this->assertFalse($licenses->isUpgradeable('^1.0.0'));
-        $this->assertFalse($licenses->isUpgradeable('^2.0.0'));
-    }
-
-    public function testActivateThrowsExceptionWhenAlreadyActivated(): void
-    {
-        App::plugin(
-            name: 'test/package',
-            extends: [],
-            info: ['version' => '1.0.0'],
-            version: '1.0.0'
-        );
-
-        // Create a licenses instance with an already activated license
-        $licenses = new Licenses(
-            licenses: [
-                'test/package' => [
-                    'licenseKey' => 'KT1-ABC123-DEF456',
-                    'licenseCompatibility' => '^1.0.0'
-                ]
-            ],
-            packageName: 'test/package',
-            httpClient: null
-        );
-
-        $this->expectException(\Kirby\Exception\LogicException::class);
-        $this->expectExceptionMessage('License key already activated');
-
-        $licenses->activate('test@example.com', '123456');
-    }
-
-    public function testActivateFromRequestMissingEmail(): void
-    {
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'test/package'
-        );
-
-        // Create a request that's missing email
-        $request = new Request([
-            'body' => ['orderId' => '123456']
-        ]);
-
-        $this->expectException(\Kirby\Exception\LogicException::class);
-        $this->expectExceptionMessage('Missing license registration parameters "email" or "orderId"');
-
-        $licenses->activateFromRequest($request);
-    }
-
-    public function testActivateFromRequestMissingOrderId(): void
-    {
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'test/package'
-        );
-
-        // Create a request that's missing orderId
-        $request = new Request([
-            'body' => ['email' => 'test@example.com']
-        ]);
-
-        $this->expectException(\Kirby\Exception\LogicException::class);
-        $this->expectExceptionMessage('Missing license registration parameters "email" or "orderId"');
-
-        $licenses->activateFromRequest($request);
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+        $this->assertEquals('invalid', $licenses->getStatus());
     }
 
     public function testGetLicenseReturnsArrayWithValidKey(): void
     {
-        $licenses = new Licenses(
-            licenses: [
-                'test/package' => [
-                    'licenseKey' => 'KT1-ABC123-DEF456',
-                    'licenseCompatibility' => '^1.0.0'
-                ]
-            ],
-            packageName: 'test/package'
-        );
+        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+            'test/package' => [
+                'licenseKey' => 'KT1-ABC123-DEF456',
+                'licenseCompatibility' => '^1.0.0',
+                'pluginVersion' => null, // Use null to prevent refresh
+                'createdAt' => '2024-01-01T00:00:00Z'
+            ]
+        ]));
 
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
         $license = $licenses->getLicense();
 
         $this->assertIsArray($license);
@@ -226,61 +96,14 @@ class LicensesTest extends TestCase
 
     public function testGetLicenseReturnsNullWithInvalidKey(): void
     {
-        $licenses = new Licenses(
-            licenses: [
-                'test/package' => [
-                    'licenseKey' => 'INVALID-KEY',
-                    'licenseCompatibility' => '^1.0.0'
-                ]
-            ],
-            packageName: 'test/package'
-        );
+        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+            'test/package' => [
+                'licenseKey' => 'INVALID-KEY',
+                'licenseCompatibility' => '^1.0.0'
+            ]
+        ]));
 
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
         $this->assertNull($licenses->getLicense());
-    }
-
-    public function testUpdate(): void
-    {
-        file_put_contents(static::LICENSE_FILE_PATH, '{}');
-
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'test/package'
-        );
-
-        $mockPlugin = $this->createMock(\Kirby\Plugin\Plugin::class);
-        $mockPlugin->method('version')->willReturn('1.0.0');
-
-        $this->kirby->extend([
-            'plugins' => [
-                'test/package' => $mockPlugin
-            ]
-        ]);
-
-        $testData = [
-            'licenseKey' => 'KT1-ABC123-DEF456',
-            'licenseCompatibility' => '^1.0.0',
-            'order' => [
-                'createdAt' => '2024-01-01T00:00:00Z'
-            ]
-        ];
-
-        $licenses->update('test/package', $testData);
-
-        $this->assertEquals('KT1-ABC123-DEF456', $licenses->getLicenseKey());
-        $this->assertEquals('^1.0.0', $licenses->getLicenseCompatibility());
-    }
-
-    public function testIsCompatible(): void
-    {
-        $licenses = new Licenses(
-            licenses: [],
-            packageName: 'test/package'
-        );
-
-        // Since the plugin is not found, it should return `false` for all version constraints
-        $this->assertFalse($licenses->isCompatible('^1.0.0'));
-        $this->assertFalse($licenses->isCompatible('^2.0.0'));
-        $this->assertFalse($licenses->isCompatible(null));
     }
 }

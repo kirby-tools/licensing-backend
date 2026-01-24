@@ -2,39 +2,60 @@
 
 declare(strict_types = 1);
 
+use JohannSchopplich\Licensing\LicensePanel;
+use JohannSchopplich\Licensing\LicenseUtils;
 use JohannSchopplich\Licensing\PluginLicenseExtensions;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
+#[Group('deprecated')]
 class PluginLicenseExtensionsTest extends TestCase
 {
-    public function testToPluginId(): void
+    public function testToPluginIdDelegatesToLicenseUtils(): void
     {
-        $this->assertEquals('copilot', PluginLicenseExtensions::toPluginId('johannschopplich/kirby-copilot'));
-        $this->assertEquals('content-translator', PluginLicenseExtensions::toPluginId('johannschopplich/kirby-content-translator'));
-        $this->assertEquals('seo-audit', PluginLicenseExtensions::toPluginId('johannschopplich/kirby-seo-audit'));
+        $this->assertEquals(
+            LicenseUtils::toPluginId('johannschopplich/kirby-copilot'),
+            PluginLicenseExtensions::toPluginId('johannschopplich/kirby-copilot')
+        );
     }
 
-    public function testToApiPrefix(): void
+    public function testToApiPrefixDelegatesToLicenseUtils(): void
     {
-        $this->assertEquals('__copilot__', PluginLicenseExtensions::toApiPrefix('johannschopplich/kirby-copilot'));
-        $this->assertEquals('__content-translator__', PluginLicenseExtensions::toApiPrefix('johannschopplich/kirby-content-translator'));
-        $this->assertEquals('__seo-audit__', PluginLicenseExtensions::toApiPrefix('johannschopplich/kirby-seo-audit'));
+        $this->assertEquals(
+            LicenseUtils::toApiPrefix('johannschopplich/kirby-copilot'),
+            PluginLicenseExtensions::toApiPrefix('johannschopplich/kirby-copilot')
+        );
     }
 
-    public function testToPackageSlug(): void
+    public function testToPackageSlugDelegatesToLicenseUtils(): void
     {
-        $this->assertEquals('johannschopplich-kirby-copilot', PluginLicenseExtensions::toPackageSlug('johannschopplich/kirby-copilot'));
+        $this->assertEquals(
+            LicenseUtils::toPackageSlug('johannschopplich/kirby-copilot'),
+            PluginLicenseExtensions::toPackageSlug('johannschopplich/kirby-copilot')
+        );
     }
 
-    public function testFormatCompatibility(): void
+    public function testFormatCompatibilityDelegatesToLicenseUtils(): void
     {
-        // Single version
-        $this->assertEquals('v1', PluginLicenseExtensions::formatCompatibility('^1'));
+        $this->assertEquals(
+            LicenseUtils::formatCompatibility('^1 || ^2'),
+            PluginLicenseExtensions::formatCompatibility('^1 || ^2')
+        );
+    }
 
-        // Two versions
-        $this->assertEquals('v1 & v2', PluginLicenseExtensions::formatCompatibility('^1 || ^2'));
+    public function testTranslationsDelegatesToLicensePanel(): void
+    {
+        $this->assertEquals(
+            LicensePanel::translations(),
+            PluginLicenseExtensions::translations()
+        );
+    }
 
-        // Three or more versions
-        $this->assertEquals('v1, v2 & v3', PluginLicenseExtensions::formatCompatibility('^1 || ^2 || ^3'));
+    public function testActivationErrorKeysConstantExists(): void
+    {
+        $this->assertEquals(
+            LicensePanel::ACTIVATION_ERROR_KEYS,
+            PluginLicenseExtensions::ACTIVATION_ERROR_KEYS
+        );
     }
 }

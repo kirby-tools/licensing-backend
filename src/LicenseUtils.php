@@ -1,0 +1,64 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace JohannSchopplich\Licensing;
+
+/**
+ * Utility functions for license-related string operations.
+ *
+ * @link      https://kirby.tools
+ * @copyright Johann Schopplich
+ * @license   AGPL-3.0
+ */
+class LicenseUtils
+{
+    /**
+     * Converts package name to slug (e.g., `johannschopplich/kirby-copilot` → `johannschopplich-kirby-copilot`)
+     */
+    public static function toPackageSlug(string $packageName): string
+    {
+        return str_replace('/', '-', $packageName);
+    }
+
+    /**
+     * Extracts plugin ID from package name (e.g., `johannschopplich/kirby-copilot` → `copilot`)
+     */
+    public static function toPluginId(string $packageName): string
+    {
+        return preg_replace('!^.*/kirby-!', '', $packageName);
+    }
+
+    /**
+     * Converts package name to API prefix (e.g., `johannschopplich/kirby-copilot` → `__copilot__`)
+     */
+    public static function toApiPrefix(string $packageName): string
+    {
+        return '__' . static::toPluginId($packageName) . '__';
+    }
+
+    /**
+     * Formats a compatibility string like `^1 || ^2 || ^3` into `v1, v2 & v3`.
+     */
+    public static function formatCompatibility(string $compatibility): string
+    {
+        $versions = array_map(
+            fn ($part) => (int)preg_replace('/\D/', '', trim($part)),
+            explode('||', $compatibility)
+        );
+
+        $formatted = array_map(fn ($v) => "v{$v}", $versions);
+
+        $count = count($formatted);
+        if ($count === 1) {
+            return $formatted[0];
+        }
+
+        if ($count === 2) {
+            return $formatted[0] . ' & ' . $formatted[1];
+        }
+
+        $last = array_pop($formatted);
+        return implode(', ', $formatted) . ' & ' . $last;
+    }
+}

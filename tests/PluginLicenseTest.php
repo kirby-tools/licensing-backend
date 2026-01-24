@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-use JohannSchopplich\Licensing\Licenses;
+use JohannSchopplich\Licensing\LicensePanel;
+use JohannSchopplich\Licensing\LicenseRepository;
 use JohannSchopplich\Licensing\LicenseStatus;
 use JohannSchopplich\Licensing\PluginLicense;
-use JohannSchopplich\Licensing\PluginLicenseExtensions;
 use Kirby\Cms\App;
 use Kirby\Plugin\License as KirbyLicense;
 use Kirby\Plugin\LicenseStatus as KirbyLicenseStatus;
@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 
 class PluginLicenseTest extends TestCase
 {
-    public const LICENSE_FILE_PATH = __DIR__ . '/' . Licenses::LICENSE_FILE;
+    public const LICENSE_FILE_PATH = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
 
     private App $kirby;
     private Plugin $plugin;
@@ -26,7 +26,7 @@ class PluginLicenseTest extends TestCase
                 'index' => __DIR__,
                 'license' => __DIR__
             ],
-            'translations' => PluginLicenseExtensions::translations()
+            'translations' => LicensePanel::translations()
         ]);
 
         $this->plugin = $this->createMock(Plugin::class);
@@ -62,10 +62,10 @@ class PluginLicenseTest extends TestCase
         $method = $reflection->getMethod('toKirbyStatus');
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
-        $status = $method->invoke($pluginLicense, 'active');
+        $status = $method->invoke($pluginLicense, LicenseStatus::Active);
 
         $this->assertInstanceOf(KirbyLicenseStatus::class, $status);
-        $this->assertEquals(LicenseStatus::ACTIVE, $status->value());
+        $this->assertEquals(LicenseStatus::Active->value, $status->value());
         $this->assertEquals('Licensed', $status->label());
         $this->assertEquals('check', $status->icon());
         $this->assertEquals('positive', $status->theme());
@@ -77,7 +77,7 @@ class PluginLicenseTest extends TestCase
         $method = $reflection->getMethod('toKirbyStatus');
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
-        $status = $method->invoke($pluginLicense, 'inactive');
+        $status = $method->invoke($pluginLicense, LicenseStatus::Inactive);
 
         $this->assertInstanceOf(KirbyLicenseStatus::class, $status);
         $this->assertEquals('missing', $status->value());
@@ -92,10 +92,10 @@ class PluginLicenseTest extends TestCase
         $method = $reflection->getMethod('toKirbyStatus');
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
-        $status = $method->invoke($pluginLicense, 'invalid');
+        $status = $method->invoke($pluginLicense, LicenseStatus::Invalid);
 
         $this->assertInstanceOf(KirbyLicenseStatus::class, $status);
-        $this->assertEquals(LicenseStatus::INVALID, $status->value());
+        $this->assertEquals(LicenseStatus::Invalid->value, $status->value());
         $this->assertEquals('Invalid license', $status->label());
         $this->assertEquals('alert', $status->icon());
         $this->assertEquals('negative', $status->theme());
@@ -107,10 +107,10 @@ class PluginLicenseTest extends TestCase
         $method = $reflection->getMethod('toKirbyStatus');
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
-        $status = $method->invoke($pluginLicense, 'incompatible');
+        $status = $method->invoke($pluginLicense, LicenseStatus::Incompatible);
 
         $this->assertInstanceOf(KirbyLicenseStatus::class, $status);
-        $this->assertEquals(LicenseStatus::INCOMPATIBLE, $status->value());
+        $this->assertEquals(LicenseStatus::Incompatible->value, $status->value());
         $this->assertEquals('Incompatible license version', $status->label());
         $this->assertEquals('alert', $status->icon());
         $this->assertEquals('negative', $status->theme());
@@ -122,28 +122,13 @@ class PluginLicenseTest extends TestCase
         $method = $reflection->getMethod('toKirbyStatus');
 
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
-        $status = $method->invoke($pluginLicense, 'upgradeable');
+        $status = $method->invoke($pluginLicense, LicenseStatus::Upgradeable);
 
         $this->assertInstanceOf(KirbyLicenseStatus::class, $status);
-        $this->assertEquals(LicenseStatus::UPGRADEABLE, $status->value());
+        $this->assertEquals(LicenseStatus::Upgradeable->value, $status->value());
         $this->assertEquals('License upgrade available', $status->label());
         $this->assertEquals('refresh', $status->icon());
         $this->assertEquals('notice', $status->theme());
-    }
-
-    public function testMapToKirbyStatusUnknown(): void
-    {
-        $reflection = new ReflectionClass(PluginLicense::class);
-        $method = $reflection->getMethod('toKirbyStatus');
-
-        $pluginLicense = new PluginLicense($this->plugin, 'test/package');
-        $status = $method->invoke($pluginLicense, 'unknown_status');
-
-        $this->assertInstanceOf(KirbyLicenseStatus::class, $status);
-        $this->assertEquals('unknown', $status->value());
-        $this->assertEquals('Unknown license status', $status->label());
-        $this->assertEquals('question', $status->icon());
-        $this->assertEquals('passive', $status->theme());
     }
 
     public function testConstructorInitializesCorrectly(): void
