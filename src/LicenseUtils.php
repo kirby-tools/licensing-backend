@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace JohannSchopplich\Licensing;
 
+use Kirby\Cms\App;
+
 /**
  * Utility functions for license-related string operations.
  *
@@ -13,6 +15,16 @@ namespace JohannSchopplich\Licensing;
  */
 class LicenseUtils
 {
+    /**
+     * Gets the current plugin version for a package.
+     */
+    public static function getPluginVersion(string $packageName): string|null
+    {
+        $kirbyPluginName = str_replace('/kirby-', '/', $packageName);
+
+        return App::instance()->plugin($kirbyPluginName)?->version();
+    }
+
     /**
      * Converts package name to slug (e.g., `johannschopplich/kirby-copilot` → `johannschopplich-kirby-copilot`)
      */

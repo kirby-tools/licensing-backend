@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace JohannSchopplich\Licensing;
 
-use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Toolkit\I18n;
 use Throwable;
@@ -117,8 +116,7 @@ class LicensePanel
                             'target' => '_blank'
                         ];
 
-                    $kirbyPluginName = str_replace('/kirby-', '/', $packageName);
-                    $pluginVersion = App::instance()->plugin($kirbyPluginName)?->version() ?? '-';
+                    $pluginVersion = LicenseUtils::getPluginVersion($packageName) ?? '–';
 
                     return [
                         'component' => 'k-form-dialog',

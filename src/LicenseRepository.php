@@ -20,6 +20,7 @@ class LicenseRepository
     public const LICENSE_FILE = '.kirby-tools-licenses';
 
     protected string $licenseFile;
+    protected array|null $cache = null;
 
     public function __construct()
     {
@@ -31,11 +32,17 @@ class LicenseRepository
      */
     public function readAll(): array
     {
-        try {
-            return Json::read($this->licenseFile);
-        } catch (Throwable) {
-            return [];
+        if ($this->cache !== null) {
+            return $this->cache;
         }
+
+        try {
+            $this->cache = Json::read($this->licenseFile);
+        } catch (Throwable) {
+            $this->cache = [];
+        }
+
+        return $this->cache;
     }
 
     /**
@@ -86,5 +93,8 @@ class LicenseRepository
         ];
 
         Json::write($this->licenseFile, $licenses);
+
+        // Invalidate cache after write
+        $this->cache = $licenses;
     }
 }

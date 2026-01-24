@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace JohannSchopplich\Licensing;
 
 use Composer\Semver\Semver;
-use Kirby\Cms\App;
 use Kirby\Exception\LogicException;
 
 /**
@@ -100,9 +99,6 @@ class LicenseValidator
      */
     public function getPluginVersion(): string|null
     {
-        // Map package name to Kirby plugin name by removing the vendor prefix
-        $kirbyPluginName = str_replace('/kirby-', '/', $this->packageName);
-
-        return App::instance()->plugin($kirbyPluginName)?->version();
+        return LicenseUtils::getPluginVersion($this->packageName);
     }
 }
