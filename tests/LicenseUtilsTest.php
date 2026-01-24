@@ -32,9 +32,9 @@ class LicenseUtilsTest extends TestCase
         $this->assertEquals('v1', LicenseUtils::formatCompatibility('^1'));
 
         // Two versions
-        $this->assertEquals('v1 & v2', LicenseUtils::formatCompatibility('^1 || ^2'));
+        $this->assertEquals('v1, v2', LicenseUtils::formatCompatibility('^1 || ^2'));
 
         // Three or more versions
-        $this->assertEquals('v1, v2 & v3', LicenseUtils::formatCompatibility('^1 || ^2 || ^3'));
+        $this->assertEquals('v1, v2, v3', LicenseUtils::formatCompatibility('^1 || ^2 || ^3'));
     }
 }
