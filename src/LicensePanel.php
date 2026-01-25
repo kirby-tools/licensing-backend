@@ -282,7 +282,7 @@ class LicensePanel
 
                 'kirby-tools.license.info.key' => 'Clé de licence',
                 'kirby-tools.license.info.version' => 'Version',
-                'kirby-tools.license.info.licenseCompatibility' => 'Licence couvre {versions}',
+                'kirby-tools.license.info.licenseCompatibility' => 'La licence couvre {versions}',
                 'kirby-tools.license.info.status' => 'Statut',
                 'kirby-tools.license.info.status.active' => 'Active',
                 'kirby-tools.license.info.status.upgradeable' => 'Mise à niveau disponible',
@@ -342,7 +342,7 @@ class LicensePanel
 
                 'kirby-tools.license.info.key' => 'Clave de licencia',
                 'kirby-tools.license.info.version' => 'Versión',
-                'kirby-tools.license.info.licenseCompatibility' => 'Licencia cubre {versions}',
+                'kirby-tools.license.info.licenseCompatibility' => 'La licencia cubre {versions}',
                 'kirby-tools.license.info.status' => 'Estado',
                 'kirby-tools.license.info.status.active' => 'Activa',
                 'kirby-tools.license.info.status.upgradeable' => 'Actualización disponible',
@@ -372,7 +372,7 @@ class LicensePanel
 
                 'kirby-tools.license.info.key' => 'Chiave di licenza',
                 'kirby-tools.license.info.version' => 'Versione',
-                'kirby-tools.license.info.licenseCompatibility' => 'Licenza copre {versions}',
+                'kirby-tools.license.info.licenseCompatibility' => 'La licenza copre {versions}',
                 'kirby-tools.license.info.status' => 'Stato',
                 'kirby-tools.license.info.status.active' => 'Attiva',
                 'kirby-tools.license.info.status.upgradeable' => 'Aggiornamento disponibile',
