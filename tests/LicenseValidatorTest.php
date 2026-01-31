@@ -4,9 +4,12 @@ declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\LicenseValidator;
 use Kirby\Cms\App;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-class LicenseValidatorTest extends TestCase
+#[CoversClass(LicenseValidator::class)]
+final class LicenseValidatorTest extends TestCase
 {
     private App $kirby;
 
@@ -24,7 +27,8 @@ class LicenseValidatorTest extends TestCase
         App::destroy();
     }
 
-    public function testIsValidWithValidKeys(): void
+    #[Test]
+    public function is_valid_with_valid_keys(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -32,7 +36,8 @@ class LicenseValidatorTest extends TestCase
         $this->assertTrue($validator->isValid('KT999-XYZ789-ABC123'));
     }
 
-    public function testIsValidWithInvalidKeys(): void
+    #[Test]
+    public function is_valid_with_invalid_keys(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -42,7 +47,8 @@ class LicenseValidatorTest extends TestCase
         $this->assertFalse($validator->isValid(null));
     }
 
-    public function testGetLicenseGeneration(): void
+    #[Test]
+    public function get_license_generation(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -51,7 +57,8 @@ class LicenseValidatorTest extends TestCase
         $this->assertNull($validator->getLicenseGeneration('INVALID-KEY'));
     }
 
-    public function testIsUpgradeableWithNullOrEmpty(): void
+    #[Test]
+    public function is_upgradeable_with_null_or_empty(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -59,7 +66,8 @@ class LicenseValidatorTest extends TestCase
         $this->assertFalse($validator->isUpgradeable(''));
     }
 
-    public function testIsUpgradeableWithoutPlugin(): void
+    #[Test]
+    public function is_upgradeable_without_plugin(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -67,7 +75,8 @@ class LicenseValidatorTest extends TestCase
         $this->assertFalse($validator->isUpgradeable('^2.0.0'));
     }
 
-    public function testIsUpgradeableWithPlugin(): void
+    #[Test]
+    public function is_upgradeable_with_plugin(): void
     {
         App::plugin(
             name: 'test/package',
@@ -84,7 +93,8 @@ class LicenseValidatorTest extends TestCase
         $this->assertFalse($validator->isUpgradeable('^2.0.0'));
     }
 
-    public function testIsCompatibleWithoutPlugin(): void
+    #[Test]
+    public function is_compatible_without_plugin(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -93,7 +103,8 @@ class LicenseValidatorTest extends TestCase
         $this->assertFalse($validator->isCompatible(null));
     }
 
-    public function testIsCompatibleWithPlugin(): void
+    #[Test]
+    public function is_compatible_with_plugin(): void
     {
         App::plugin(
             name: 'test/package',

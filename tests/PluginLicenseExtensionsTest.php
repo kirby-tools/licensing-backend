@@ -5,13 +5,17 @@ declare(strict_types = 1);
 use JohannSchopplich\Licensing\LicensePanel;
 use JohannSchopplich\Licensing\LicenseUtils;
 use JohannSchopplich\Licensing\PluginLicenseExtensions;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+#[CoversClass(PluginLicenseExtensions::class)]
 #[Group('deprecated')]
-class PluginLicenseExtensionsTest extends TestCase
+final class PluginLicenseExtensionsTest extends TestCase
 {
-    public function testToPluginIdDelegatesToLicenseUtils(): void
+    #[Test]
+    public function to_plugin_id_delegates_to_license_utils(): void
     {
         $this->assertEquals(
             LicenseUtils::toPluginId('johannschopplich/kirby-copilot'),
@@ -19,7 +23,8 @@ class PluginLicenseExtensionsTest extends TestCase
         );
     }
 
-    public function testToApiPrefixDelegatesToLicenseUtils(): void
+    #[Test]
+    public function to_api_prefix_delegates_to_license_utils(): void
     {
         $this->assertEquals(
             LicenseUtils::toApiPrefix('johannschopplich/kirby-copilot'),
@@ -27,7 +32,8 @@ class PluginLicenseExtensionsTest extends TestCase
         );
     }
 
-    public function testToPackageSlugDelegatesToLicenseUtils(): void
+    #[Test]
+    public function to_package_slug_delegates_to_license_utils(): void
     {
         $this->assertEquals(
             LicenseUtils::toPackageSlug('johannschopplich/kirby-copilot'),
@@ -35,7 +41,8 @@ class PluginLicenseExtensionsTest extends TestCase
         );
     }
 
-    public function testFormatCompatibilityDelegatesToLicenseUtils(): void
+    #[Test]
+    public function format_compatibility_delegates_to_license_utils(): void
     {
         $this->assertEquals(
             LicenseUtils::formatCompatibility('^1 || ^2'),
@@ -43,7 +50,8 @@ class PluginLicenseExtensionsTest extends TestCase
         );
     }
 
-    public function testTranslationsDelegatesToLicensePanel(): void
+    #[Test]
+    public function translations_delegates_to_license_panel(): void
     {
         $this->assertEquals(
             LicensePanel::translations(),
@@ -51,7 +59,8 @@ class PluginLicenseExtensionsTest extends TestCase
         );
     }
 
-    public function testActivationErrorKeysConstantExists(): void
+    #[Test]
+    public function activation_error_keys_constant_exists(): void
     {
         $this->assertEquals(
             LicensePanel::ACTIVATION_ERROR_KEYS,

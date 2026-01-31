@@ -10,9 +10,12 @@ use Kirby\Cms\App;
 use Kirby\Plugin\License as KirbyLicense;
 use Kirby\Plugin\LicenseStatus as KirbyLicenseStatus;
 use Kirby\Plugin\Plugin;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-class PluginLicenseTest extends TestCase
+#[CoversClass(PluginLicense::class)]
+final class PluginLicenseTest extends TestCase
 {
     public const LICENSE_FILE_PATH = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
 
@@ -42,7 +45,8 @@ class PluginLicenseTest extends TestCase
         App::destroy();
     }
 
-    public function testPluginLicenseExtendsKirbyLicense(): void
+    #[Test]
+    public function plugin_license_extends_kirby_license(): void
     {
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
 
@@ -50,13 +54,15 @@ class PluginLicenseTest extends TestCase
         $this->assertInstanceOf(PluginLicense::class, $pluginLicense);
     }
 
-    public function testPluginLicenseConstants(): void
+    #[Test]
+    public function plugin_license_constants(): void
     {
         $this->assertEquals('Kirby Tools Plugin License', PluginLicense::LICENSE_NAME);
         $this->assertEquals('https://kirby.tools/license', PluginLicense::LICENSE_URL);
     }
 
-    public function testMapToKirbyStatusActive(): void
+    #[Test]
+    public function map_to_kirby_status_active(): void
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('toKirbyStatus');
@@ -71,7 +77,8 @@ class PluginLicenseTest extends TestCase
         $this->assertEquals('positive', $status->theme());
     }
 
-    public function testMapToKirbyStatusInactive(): void
+    #[Test]
+    public function map_to_kirby_status_inactive(): void
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('toKirbyStatus');
@@ -86,7 +93,8 @@ class PluginLicenseTest extends TestCase
         $this->assertEquals('love', $status->theme());
     }
 
-    public function testMapToKirbyStatusInvalid(): void
+    #[Test]
+    public function map_to_kirby_status_invalid(): void
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('toKirbyStatus');
@@ -101,7 +109,8 @@ class PluginLicenseTest extends TestCase
         $this->assertEquals('negative', $status->theme());
     }
 
-    public function testMapToKirbyStatusIncompatible(): void
+    #[Test]
+    public function map_to_kirby_status_incompatible(): void
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('toKirbyStatus');
@@ -116,7 +125,8 @@ class PluginLicenseTest extends TestCase
         $this->assertEquals('negative', $status->theme());
     }
 
-    public function testMapToKirbyStatusUpgradeable(): void
+    #[Test]
+    public function map_to_kirby_status_upgradeable(): void
     {
         $reflection = new ReflectionClass(PluginLicense::class);
         $method = $reflection->getMethod('toKirbyStatus');
@@ -131,7 +141,8 @@ class PluginLicenseTest extends TestCase
         $this->assertEquals('notice', $status->theme());
     }
 
-    public function testConstructorInitializesCorrectly(): void
+    #[Test]
+    public function constructor_initializes_correctly(): void
     {
         $pluginLicense = new PluginLicense($this->plugin, 'test/package');
 
@@ -141,7 +152,8 @@ class PluginLicenseTest extends TestCase
         $this->assertEquals('test/package', $packageNameProperty->getValue($pluginLicense));
     }
 
-    public function testConstructorWithActiveLicense(): void
+    #[Test]
+    public function constructor_with_active_license(): void
     {
         file_put_contents(static::LICENSE_FILE_PATH, json_encode([
             'test/package' => [

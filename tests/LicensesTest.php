@@ -6,9 +6,12 @@ use JohannSchopplich\Licensing\Http\HttpClientInterface;
 use JohannSchopplich\Licensing\LicenseRepository;
 use JohannSchopplich\Licensing\Licenses;
 use Kirby\Cms\App;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-class LicensesTest extends TestCase
+#[CoversClass(Licenses::class)]
+final class LicensesTest extends TestCase
 {
     public const LICENSE_FILE_PATH = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
 
@@ -46,7 +49,8 @@ class LicensesTest extends TestCase
         App::destroy();
     }
 
-    public function testReadWithNoLicenseFile(): void
+    #[Test]
+    public function read_with_no_license_file(): void
     {
         $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
 
@@ -55,13 +59,15 @@ class LicensesTest extends TestCase
         $this->assertNull($licenses->getLicense());
     }
 
-    public function testGetStatusInactive(): void
+    #[Test]
+    public function get_status_inactive(): void
     {
         $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
         $this->assertEquals('inactive', $licenses->getStatus());
     }
 
-    public function testGetStatusInvalid(): void
+    #[Test]
+    public function get_status_invalid(): void
     {
         file_put_contents(static::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
@@ -74,7 +80,8 @@ class LicensesTest extends TestCase
         $this->assertEquals('invalid', $licenses->getStatus());
     }
 
-    public function testGetLicenseReturnsArrayWithValidKey(): void
+    #[Test]
+    public function get_license_returns_array_with_valid_key(): void
     {
         file_put_contents(static::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
@@ -94,7 +101,8 @@ class LicensesTest extends TestCase
         $this->assertArrayHasKey('compatibility', $license);
     }
 
-    public function testGetLicenseReturnsNullWithInvalidKey(): void
+    #[Test]
+    public function get_license_returns_null_with_invalid_key(): void
     {
         file_put_contents(static::LICENSE_FILE_PATH, json_encode([
             'test/package' => [

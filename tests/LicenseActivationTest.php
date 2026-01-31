@@ -10,10 +10,13 @@ use JohannSchopplich\Licensing\LicenseValidator;
 use Kirby\Cms\App;
 use Kirby\Exception\LogicException;
 use Kirby\Http\Request;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
-class LicenseActivationTest extends TestCase
+#[CoversClass(LicenseActivator::class)]
+final class LicenseActivationTest extends TestCase
 {
     private const LICENSE_FILE = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
 
@@ -42,7 +45,8 @@ class LicenseActivationTest extends TestCase
         App::destroy();
     }
 
-    public function testActivateSuccessfully(): void
+    #[Test]
+    public function activate_successfully(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -75,7 +79,8 @@ class LicenseActivationTest extends TestCase
         $this->assertEquals('active', $licenses->getStatus());
     }
 
-    public function testActivateWithWrongPackageName(): void
+    #[Test]
+    public function activate_with_wrong_package_name(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -109,7 +114,8 @@ class LicenseActivationTest extends TestCase
         $activator->activate('test@example.com', '123456');
     }
 
-    public function testActivateWithIncompatibleVersion(): void
+    #[Test]
+    public function activate_with_incompatible_version(): void
     {
         // Register a plugin with version 2.0.0 that's incompatible with license ^1.0.0
         App::plugin(
@@ -144,7 +150,8 @@ class LicenseActivationTest extends TestCase
         $activator->activate('test@example.com', '123456');
     }
 
-    public function testActivateWithApiError(): void
+    #[Test]
+    public function activate_with_api_error(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -173,7 +180,8 @@ class LicenseActivationTest extends TestCase
         $activator->activate('test@example.com', '123456');
     }
 
-    public function testActivationUpdatesLicenseFile(): void
+    #[Test]
+    public function activation_updates_license_file(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -213,7 +221,8 @@ class LicenseActivationTest extends TestCase
         $this->assertEquals('^1.0.0', $savedData['simple/package']['licenseCompatibility']);
     }
 
-    public function testActivateFromRequestMissingEmail(): void
+    #[Test]
+    public function activate_from_request_missing_email(): void
     {
         $repository = new LicenseRepository();
         $validator = new LicenseValidator('test/package');
@@ -235,7 +244,8 @@ class LicenseActivationTest extends TestCase
         $activator->activateFromRequest($request);
     }
 
-    public function testActivateFromRequestMissingOrderId(): void
+    #[Test]
+    public function activate_from_request_missing_order_id(): void
     {
         $repository = new LicenseRepository();
         $validator = new LicenseValidator('test/package');
@@ -257,7 +267,8 @@ class LicenseActivationTest extends TestCase
         $activator->activateFromRequest($request);
     }
 
-    public function testActivateThrowsExceptionWhenAlreadyActivated(): void
+    #[Test]
+    public function activate_throws_exception_when_already_activated(): void
     {
         App::plugin(
             name: 'test/package',
