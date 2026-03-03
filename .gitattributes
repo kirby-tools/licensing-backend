@@ -3,7 +3,7 @@
 .gitattributes export-ignore
 .gitignore export-ignore
 
-# Development files
+# Development
 .editorconfig export-ignore
 .php-cs-fixer.dist.php export-ignore
 .vscode/ export-ignore
@@ -13,6 +13,6 @@ pnpm-lock.yaml export-ignore
 scripts/ export-ignore
 tools/ export-ignore
 
-# Tests
+# Quality assurance
 phpunit.xml.dist export-ignore
 tests/ export-ignore
