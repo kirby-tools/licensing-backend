@@ -235,17 +235,17 @@ final class LicenseActivationTest extends TestCase
 
         // Create a request that's missing email
         $request = new Request([
-            'body' => ['orderId' => '123456']
+            'body' => ['licenseKey' => 'KT2-xxxxx-xxxxx']
         ]);
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Missing license registration parameters "email" or "orderId"');
+        $this->expectExceptionMessage('Missing license registration parameters "email" or "licenseKey"');
 
         $activator->activateFromRequest($request);
     }
 
     #[Test]
-    public function activate_from_request_missing_order_id(): void
+    public function activate_from_request_missing_license_key(): void
     {
         $repository = new LicenseRepository();
         $validator = new LicenseValidator('test/package');
@@ -256,13 +256,13 @@ final class LicenseActivationTest extends TestCase
             $this->mockHttpClient
         );
 
-        // Create a request that's missing order ID
+        // Create a request that's missing license key
         $request = new Request([
             'body' => ['email' => 'test@example.com']
         ]);
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Missing license registration parameters "email" or "orderId"');
+        $this->expectExceptionMessage('Missing license registration parameters "email" or "licenseKey"');
 
         $activator->activateFromRequest($request);
     }
