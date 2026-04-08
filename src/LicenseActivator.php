@@ -17,16 +17,16 @@ use Kirby\Http\Request;
  * @copyright Johann Schopplich
  * @license   AGPL-3.0
  */
-class LicenseActivator
+final class LicenseActivator
 {
-    protected const API_URL = 'https://repo.kirby.tools/api';
+    private const API_URL = 'https://repo.kirby.tools/api';
 
-    protected HttpClientInterface $httpClient;
+    private readonly HttpClientInterface $httpClient;
 
     public function __construct(
-        protected string $packageName,
-        protected LicenseRepository $repository,
-        protected LicenseValidator $validator,
+        private readonly string $packageName,
+        private readonly LicenseRepository $repository,
+        private readonly LicenseValidator $validator,
         HttpClientInterface|null $httpClient = null
     ) {
         $this->httpClient = $httpClient ?? new KirbyHttpClient();
@@ -126,7 +126,7 @@ class LicenseActivator
     /**
      * Makes an API request.
      */
-    protected function request(string $path, array $options = []): array
+    private function request(string $path, array $options = []): array
     {
         $headers = $options['headers'] ?? [];
 
@@ -140,6 +140,6 @@ class LicenseActivator
 
         $options['headers'] = $headers;
 
-        return $this->httpClient->request(static::API_URL . '/' . $path, $options);
+        return $this->httpClient->request(self::API_URL . '/' . $path, $options);
     }
 }
