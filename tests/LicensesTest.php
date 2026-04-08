@@ -60,6 +60,23 @@ final class LicensesTest extends TestCase
     }
 
     #[Test]
+    public function get_status_active(): void
+    {
+        App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
+
+        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+            'test/licensed' => [
+                'licenseKey' => 'KT1-ABC123-DEF456',
+                'licenseCompatibility' => '^1.0.0',
+                'pluginVersion' => '1.0.0',
+            ]
+        ]));
+
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        $this->assertSame('active', $licenses->getStatus());
+    }
+
+    #[Test]
     public function get_status_inactive(): void
     {
         $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
@@ -78,6 +95,40 @@ final class LicensesTest extends TestCase
 
         $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
         $this->assertEquals('invalid', $licenses->getStatus());
+    }
+
+    #[Test]
+    public function get_status_incompatible(): void
+    {
+        App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
+
+        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+            'test/licensed' => [
+                'licenseKey' => 'KT1-ABC123-DEF456',
+                'licenseCompatibility' => '^2.0.0',
+                'pluginVersion' => '1.0.0',
+            ]
+        ]));
+
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        $this->assertSame('incompatible', $licenses->getStatus());
+    }
+
+    #[Test]
+    public function get_status_upgradeable(): void
+    {
+        App::plugin(name: 'test/licensed', extends: [], info: ['version' => '2.0.0'], version: '2.0.0');
+
+        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+            'test/licensed' => [
+                'licenseKey' => 'KT1-ABC123-DEF456',
+                'licenseCompatibility' => '^1.0.0',
+                'pluginVersion' => '2.0.0',
+            ]
+        ]));
+
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        $this->assertSame('upgradeable', $licenses->getStatus());
     }
 
     #[Test]
