@@ -268,6 +268,44 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
+    public function activate_from_request_falls_back_to_order_id(): void
+    {
+        App::plugin(
+            name: 'test/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
+
+        $this->mockHttpClient->method('request')->willReturn([
+            'packageName' => 'test/package',
+            'licenseKey' => 'KT1-ABC123-DEF456',
+            'licenseCompatibility' => '^1.0.0',
+            'order' => [
+                'createdAt' => '2024-01-01T00:00:00Z'
+            ]
+        ]);
+
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('test/package');
+        $activator = new LicenseActivator(
+            'test/package',
+            $repository,
+            $validator,
+            $this->mockHttpClient
+        );
+
+        // Simulate a request from an older plugin version that sends `orderId`
+        $request = new Request([
+            'body' => ['email' => 'test@example.com', 'orderId' => '12345-67890']
+        ]);
+
+        $result = $activator->activateFromRequest($request);
+
+        $this->assertSame('ok', $result['status']);
+    }
+
+    #[Test]
     public function activate_throws_exception_when_already_activated(): void
     {
         App::plugin(

@@ -77,13 +77,14 @@ final class LicenseActivator
     {
         $request ??= App::instance()->request();
         $email = $request->get('email');
-        $licenseKey = $request->get('licenseKey');
+        // TODO: Remove `orderId` fallback once all plugins ship with licensing-backend >=0.9
+        $licenseKey = $request->get('licenseKey') ?? $request->get('orderId');
 
         if (!$email || !$licenseKey) {
             throw new LogicException('Missing license registration parameters "email" or "licenseKey"');
         }
 
-        $this->activate($email, $licenseKey);
+        $this->activate($email, (string)$licenseKey);
 
         return [
             'code' => 200,
