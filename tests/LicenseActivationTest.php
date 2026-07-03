@@ -38,8 +38,8 @@ final class LicenseActivationTest extends TestCase
 
     protected function tearDown(): void
     {
-        if (file_exists(static::LICENSE_FILE)) {
-            unlink(static::LICENSE_FILE);
+        if (file_exists(self::LICENSE_FILE)) {
+            unlink(self::LICENSE_FILE);
         }
 
         App::destroy();
@@ -212,10 +212,10 @@ final class LicenseActivationTest extends TestCase
         $activator->activate('test@example.com', '123456');
 
         // Verify license file was created
-        $this->assertFileExists(static::LICENSE_FILE);
+        $this->assertFileExists(self::LICENSE_FILE);
 
         // Verify license data was saved correctly
-        $savedData = json_decode(file_get_contents(static::LICENSE_FILE), true);
+        $savedData = json_decode(file_get_contents(self::LICENSE_FILE), true);
         $this->assertArrayHasKey('simple/package', $savedData);
         $this->assertEquals('KT1-ABC123-DEF456', $savedData['simple/package']['licenseKey']);
         $this->assertEquals('^1.0.0', $savedData['simple/package']['licenseCompatibility']);
@@ -316,7 +316,7 @@ final class LicenseActivationTest extends TestCase
         );
 
         // Create a license file with an already activated license
-        file_put_contents(static::LICENSE_FILE, json_encode([
+        file_put_contents(self::LICENSE_FILE, json_encode([
             'test/package' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
                 'licenseCompatibility' => '^1.0.0',

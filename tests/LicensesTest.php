@@ -42,8 +42,8 @@ final class LicensesTest extends TestCase
 
     protected function tearDown(): void
     {
-        if (file_exists(static::LICENSE_FILE_PATH)) {
-            unlink(static::LICENSE_FILE_PATH);
+        if (file_exists(self::LICENSE_FILE_PATH)) {
+            unlink(self::LICENSE_FILE_PATH);
         }
 
         App::destroy();
@@ -64,7 +64,7 @@ final class LicensesTest extends TestCase
     {
         App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
 
-        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/licensed' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
                 'licenseCompatibility' => '^1.0.0',
@@ -86,7 +86,7 @@ final class LicensesTest extends TestCase
     #[Test]
     public function get_status_invalid(): void
     {
-        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
                 'licenseKey' => 'INVALID-KEY',
                 'licenseCompatibility' => '^1.0.0'
@@ -102,7 +102,7 @@ final class LicensesTest extends TestCase
     {
         App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
 
-        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/licensed' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
                 'licenseCompatibility' => '^2.0.0',
@@ -119,7 +119,7 @@ final class LicensesTest extends TestCase
     {
         App::plugin(name: 'test/licensed', extends: [], info: ['version' => '2.0.0'], version: '2.0.0');
 
-        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/licensed' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
                 'licenseCompatibility' => '^1.0.0',
@@ -134,7 +134,7 @@ final class LicensesTest extends TestCase
     #[Test]
     public function get_license_returns_array_with_valid_key(): void
     {
-        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
                 'licenseCompatibility' => '^1.0.0',
@@ -155,7 +155,7 @@ final class LicensesTest extends TestCase
     #[Test]
     public function get_license_returns_null_with_invalid_key(): void
     {
-        file_put_contents(static::LICENSE_FILE_PATH, json_encode([
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
                 'licenseKey' => 'INVALID-KEY',
                 'licenseCompatibility' => '^1.0.0'
