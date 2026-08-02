@@ -30,16 +30,6 @@ final class LicensePanelTest extends TestCase
         App::destroy();
     }
 
-    #[Test]
-    #[DataProvider('activationHandlers')]
-    public function activation_handler_reports_failure_when_bound_to_kirby_api_scope(Closure $handler): void
-    {
-        $this->expectException(InvalidArgumentException::class);
-
-        // Kirby runs these handlers under its own `Api` scope, not the handler's own class
-        $handler->call($this->app->api());
-    }
-
     public static function activationHandlers(): array
     {
         $packageName = 'johannschopplich/test-plugin';
@@ -52,5 +42,15 @@ final class LicensePanelTest extends TestCase
                 array_column(LicensePanel::dialogs($packageName, 'Test Plugin'), 'submit')[0]
             ]
         ];
+    }
+
+    #[Test]
+    #[DataProvider('activationHandlers')]
+    public function activation_handler_reports_failure_when_bound_to_kirby_api_scope(Closure $handler): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        // Kirby runs these handlers under its own `Api` scope, not the handler's own class
+        $handler->call($this->app->api());
     }
 }

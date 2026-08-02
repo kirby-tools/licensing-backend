@@ -42,6 +42,29 @@ final class PluginLicenseTest extends TestCase
         App::destroy();
     }
 
+    private function createLicense(): PluginLicense
+    {
+        return new PluginLicense($this->plugin, self::PACKAGE_NAME);
+    }
+
+    private function registerPlugin(string $version): void
+    {
+        App::plugin(
+            name: 'test/package',
+            extends: [],
+            info: ['version' => $version],
+            version: $version
+        );
+    }
+
+    private function writeLicenseFile(array $data): void
+    {
+        file_put_contents(
+            self::LICENSE_FILE_PATH,
+            json_encode([self::PACKAGE_NAME => $data])
+        );
+    }
+
     #[Test]
     public function constants(): void
     {
@@ -124,28 +147,5 @@ final class PluginLicenseTest extends TestCase
         $this->assertSame('upgradeable', $status['value']);
         $this->assertSame('refresh', $status['icon']);
         $this->assertSame('notice', $status['theme']);
-    }
-
-    private function createLicense(): PluginLicense
-    {
-        return new PluginLicense($this->plugin, self::PACKAGE_NAME);
-    }
-
-    private function registerPlugin(string $version): void
-    {
-        App::plugin(
-            name: 'test/package',
-            extends: [],
-            info: ['version' => $version],
-            version: $version
-        );
-    }
-
-    private function writeLicenseFile(array $data): void
-    {
-        file_put_contents(
-            self::LICENSE_FILE_PATH,
-            json_encode([self::PACKAGE_NAME => $data])
-        );
     }
 }
