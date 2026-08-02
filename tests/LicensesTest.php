@@ -15,12 +15,12 @@ final class LicensesTest extends TestCase
 {
     public const LICENSE_FILE_PATH = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
 
-    private App $kirby;
+    private App $app;
     private HttpClientInterface $mockHttpClient;
 
     protected function setUp(): void
     {
-        $this->kirby = new App([
+        $this->app = new App([
             'roots' => [
                 'index' => __DIR__,
                 'license' => __DIR__ . '/.license'
@@ -30,7 +30,7 @@ final class LicensesTest extends TestCase
         $mockPlugin = $this->createMock(\Kirby\Plugin\Plugin::class);
         $mockPlugin->method('version')->willReturn('1.0.0');
 
-        $this->kirby->extend([
+        $this->app->extend([
             'plugins' => [
                 'test/package' => $mockPlugin
             ]

@@ -20,13 +20,13 @@ final class LicenseActivationTest extends TestCase
 {
     private const LICENSE_FILE = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
 
-    private App $kirby;
+    private App $app;
     private HttpClientInterface&MockObject $mockHttpClient;
 
     protected function setUp(): void
     {
         // Initialize Kirby application with custom license file path
-        $this->kirby = new App([
+        $this->app = new App([
             'roots' => [
                 'index' => __DIR__,
                 'license' => __DIR__ . '/.license'

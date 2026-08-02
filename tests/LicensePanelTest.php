@@ -13,11 +13,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(LicensePanel::class)]
 final class LicensePanelTest extends TestCase
 {
-    private App $kirby;
+    private App $app;
 
     protected function setUp(): void
     {
-        $this->kirby = new App([
+        $this->app = new App([
             'roots' => [
                 'index' => __DIR__,
                 'license' => __DIR__ . '/.license'
@@ -37,7 +37,7 @@ final class LicensePanelTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         // Kirby runs these handlers under its own `Api` scope, not the handler's own class
-        $handler->call($this->kirby->api());
+        $handler->call($this->app->api());
     }
 
     public static function activationHandlers(): array

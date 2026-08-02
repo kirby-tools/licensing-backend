@@ -11,11 +11,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(LicenseValidator::class)]
 final class LicenseValidatorTest extends TestCase
 {
-    private App $kirby;
+    private App $app;
 
     protected function setUp(): void
     {
-        $this->kirby = new App([
+        $this->app = new App([
             'roots' => [
                 'index' => __DIR__
             ]
