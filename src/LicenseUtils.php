@@ -7,19 +7,15 @@ namespace JohannSchopplich\Licensing;
 use Kirby\Cms\App;
 
 /**
- * Utility functions for license-related string operations.
- *
  * @link      https://kirby.tools
  * @copyright Johann Schopplich
  * @license   AGPL-3.0
  */
 final class LicenseUtils
 {
-    /**
-     * Gets the current plugin version for a package.
-     */
     public static function getPluginVersion(string $packageName): string|null
     {
+        // Kirby registers plugins without the `kirby-` prefix the Composer package name carries
         $kirbyPluginName = str_replace('/kirby-', '/', $packageName);
 
         return App::instance()->plugin($kirbyPluginName)?->version();

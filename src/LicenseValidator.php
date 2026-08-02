@@ -7,8 +7,6 @@ namespace JohannSchopplich\Licensing;
 use Composer\Semver\Semver;
 
 /**
- * Validates license keys and version compatibility for Kirby Tools plugins.
- *
  * @link      https://kirby.tools
  * @copyright Johann Schopplich
  * @license   AGPL-3.0
@@ -23,7 +21,7 @@ final class LicenseValidator
     }
 
     /**
-     * Validates if a license key matches the expected format.
+     * Checks whether a license key has the expected `KT<generation>-…` shape.
      */
     public function isValid(string|null $licenseKey): bool
     {
@@ -31,7 +29,7 @@ final class LicenseValidator
     }
 
     /**
-     * Checks if the current plugin version is compatible with the license.
+     * Checks whether the installed plugin version satisfies the license's version constraint.
      */
     public function isCompatible(string|null $versionConstraint): bool
     {
@@ -43,7 +41,7 @@ final class LicenseValidator
     }
 
     /**
-     * Checks if the license can be upgraded to support the current version.
+     * Checks whether the installed plugin's major version is newer than every major the license covers.
      */
     public function isUpgradeable(string|null $versionConstraint): bool
     {
@@ -56,7 +54,8 @@ final class LicenseValidator
             return false;
         }
 
-        // Parse version constraint to get major versions
+        // Compatibility constraints are always caret ranges like `^1 || ^2`;
+        // anything else contributes no licensed major
         $constraints = explode('||', $versionConstraint);
         $maxLicensedMajor = 0;
 
@@ -67,19 +66,15 @@ final class LicenseValidator
             }
         }
 
-        // Get current version major
         if (preg_match('/^(\d+)\./', $version, $matches)) {
             $currentMajor = (int)$matches[1];
-            // If current major is higher than max supported major, it's upgradeable
+
             return $currentMajor > $maxLicensedMajor;
         }
 
         return false;
     }
 
-    /**
-     * Extracts the license generation from a license key.
-     */
     public function getLicenseGeneration(string|null $licenseKey): int|null
     {
         if ($licenseKey !== null && preg_match(self::LICENSE_PATTERN, $licenseKey, $matches) === 1) {
@@ -89,9 +84,6 @@ final class LicenseValidator
         return null;
     }
 
-    /**
-     * Gets the current plugin version.
-     */
     public function getPluginVersion(): string|null
     {
         return LicenseUtils::getPluginVersion($this->packageName);
