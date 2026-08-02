@@ -9,7 +9,8 @@ use Kirby\Toolkit\I18n;
 use Throwable;
 
 /**
- * Provides shared Kirby extensions (dialogs, translations) for Kirby Tools plugin licensing.
+ * Every Kirby Tools plugin registers these extensions verbatim, so the dialog IDs
+ * built here must stay in sync with the ones `PluginLicense::toKirbyStatus` emits.
  *
  * @link      https://kirby.tools
  * @copyright Johann Schopplich

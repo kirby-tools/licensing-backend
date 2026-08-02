@@ -34,7 +34,7 @@ final class LicenseActivator
      * Thrown messages are matched verbatim by `LicensePanel::ACTIVATION_ERROR_KEYS`
      * to resolve a translation, so they cannot be reworded on their own.
      *
-     * @throws LogicException When the license is already activated, belongs to another plugin or does not cover the installed version.
+     * @throws LogicException When the license is already activated, belongs to another plugin, does not cover the installed version, or when the licensing API rejects the request (message taken verbatim from the response).
      */
     public function activate(string $email, string $licenseKey): void
     {
