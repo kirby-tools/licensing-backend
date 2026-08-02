@@ -26,7 +26,7 @@ final class LicenseUtils
     }
 
     /**
-     * Converts package name to slug (e.g., `johannschopplich/kirby-copilot` → `johannschopplich-kirby-copilot`)
+     * Converts package name to slug (e.g., `johannschopplich/kirby-copilot` → `johannschopplich-kirby-copilot`).
      */
     public static function toPackageSlug(string $packageName): string
     {
@@ -34,7 +34,7 @@ final class LicenseUtils
     }
 
     /**
-     * Extracts plugin ID from package name (e.g., `johannschopplich/kirby-copilot` → `copilot`)
+     * Extracts plugin ID from package name (e.g., `johannschopplich/kirby-copilot` → `copilot`).
      */
     public static function toPluginId(string $packageName): string
     {
@@ -42,7 +42,7 @@ final class LicenseUtils
     }
 
     /**
-     * Converts package name to API prefix (e.g., `johannschopplich/kirby-copilot` → `__copilot__`)
+     * Converts package name to API prefix (e.g., `johannschopplich/kirby-copilot` → `__copilot__`).
      */
     public static function toApiPrefix(string $packageName): string
     {
