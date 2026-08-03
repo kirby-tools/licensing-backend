@@ -77,8 +77,15 @@ final class LicensesTest extends TestCase
     }
 
     #[Test]
-    public function reports_inactive_for_an_unlicensed_package(): void
+    public function reports_inactive_for_a_package_missing_from_the_license_file(): void
     {
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
+            'other/package' => [
+                'licenseKey' => 'KT1-ABC123-DEF456',
+                'licenseCompatibility' => '^1.0.0'
+            ]
+        ]));
+
         $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
         $this->assertEquals('inactive', $licenses->getStatus());
     }

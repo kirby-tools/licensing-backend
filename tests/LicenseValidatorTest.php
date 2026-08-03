@@ -58,12 +58,33 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function treats_a_missing_compatibility_as_not_upgradeable(): void
+    public function treats_a_null_compatibility_as_not_upgradeable(): void
     {
+        App::plugin(
+            name: 'test/package',
+            extends: [],
+            info: ['version' => '1.5.0'],
+            version: '1.5.0'
+        );
+
         $validator = new LicenseValidator('test/package');
 
         $this->assertFalse($validator->isUpgradeable(null));
-        $this->assertFalse($validator->isUpgradeable(''));
+    }
+
+    #[Test]
+    public function treats_an_empty_compatibility_as_outgrown_by_any_installed_version(): void
+    {
+        App::plugin(
+            name: 'test/package',
+            extends: [],
+            info: ['version' => '1.5.0'],
+            version: '1.5.0'
+        );
+
+        $validator = new LicenseValidator('test/package');
+
+        $this->assertTrue($validator->isUpgradeable(''));
     }
 
     #[Test]

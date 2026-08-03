@@ -46,7 +46,7 @@ final class LicensePanelTest extends TestCase
 
     #[Test]
     #[DataProvider('activationHandlers')]
-    public function activation_handler_reports_failure_when_bound_to_kirby_api_scope(Closure $handler): void
+    public function activation_handler_throws_when_bound_to_the_kirby_api_scope(Closure $handler): void
     {
         $this->expectException(InvalidArgumentException::class);
 

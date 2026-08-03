@@ -115,7 +115,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function throws_when_the_key_does_not_cover_the_installed_plugin_version(): void
+    public function throws_naming_the_upgrade_when_the_plugin_outgrew_the_license(): void
     {
         // Register a plugin with version 2.0.0 that's incompatible with license ^1.0.0
         App::plugin(
@@ -151,7 +151,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function throws_when_the_api_reports_an_error(): void
+    public function throws_when_the_api_response_omits_the_package_name(): void
     {
         App::plugin(
             name: 'simple/package',
