@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 final class LicenseUtilsTest extends TestCase
 {
     #[Test]
-    public function to_plugin_id(): void
+    public function derives_the_plugin_id_from_the_package_name(): void
     {
         $this->assertEquals('copilot', LicenseUtils::toPluginId('johannschopplich/kirby-copilot'));
         $this->assertEquals('content-translator', LicenseUtils::toPluginId('johannschopplich/kirby-content-translator'));
@@ -19,7 +19,7 @@ final class LicenseUtilsTest extends TestCase
     }
 
     #[Test]
-    public function to_api_prefix(): void
+    public function derives_the_api_prefix_from_the_package_name(): void
     {
         $this->assertEquals('__copilot__', LicenseUtils::toApiPrefix('johannschopplich/kirby-copilot'));
         $this->assertEquals('__content-translator__', LicenseUtils::toApiPrefix('johannschopplich/kirby-content-translator'));
@@ -27,13 +27,13 @@ final class LicenseUtilsTest extends TestCase
     }
 
     #[Test]
-    public function to_package_slug(): void
+    public function slugifies_the_package_name(): void
     {
         $this->assertEquals('johannschopplich-kirby-copilot', LicenseUtils::toPackageSlug('johannschopplich/kirby-copilot'));
     }
 
     #[Test]
-    public function format_compatibility(): void
+    public function formats_a_constraint_set_as_a_version_range(): void
     {
         // Single version
         $this->assertEquals('v1', LicenseUtils::formatCompatibility('^1'));

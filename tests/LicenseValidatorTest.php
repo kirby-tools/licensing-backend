@@ -28,7 +28,7 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function is_valid_with_valid_keys(): void
+    public function accepts_keys_matching_the_kt_format(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -37,7 +37,7 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function is_valid_with_invalid_keys(): void
+    public function rejects_malformed_empty_and_null_keys(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -48,7 +48,7 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function get_license_generation(): void
+    public function extracts_the_generation_number_from_the_key(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -58,7 +58,7 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function is_upgradeable_with_null_or_empty(): void
+    public function treats_a_missing_compatibility_as_not_upgradeable(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -67,7 +67,7 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function is_upgradeable_without_plugin(): void
+    public function is_not_upgradeable_without_an_installed_plugin(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -76,7 +76,7 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function is_upgradeable_with_plugin(): void
+    public function is_upgradeable_only_when_the_plugin_outgrew_the_compatibility_range(): void
     {
         App::plugin(
             name: 'test/package',
@@ -94,7 +94,7 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function is_compatible_without_plugin(): void
+    public function is_never_compatible_without_an_installed_plugin(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -104,7 +104,7 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function is_compatible_with_plugin(): void
+    public function is_compatible_when_the_installed_version_falls_in_the_range(): void
     {
         App::plugin(
             name: 'test/package',

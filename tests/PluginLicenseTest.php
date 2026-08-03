@@ -66,14 +66,14 @@ final class PluginLicenseTest extends TestCase
     }
 
     #[Test]
-    public function constants(): void
+    public function exposes_the_license_name_and_url(): void
     {
         $this->assertSame('Kirby Tools Plugin License', PluginLicense::LICENSE_NAME);
         $this->assertSame('https://kirby.tools/license', PluginLicense::LICENSE_URL);
     }
 
     #[Test]
-    public function constructor_active(): void
+    public function shows_an_active_badge_for_a_valid_compatible_license(): void
     {
         $this->registerPlugin('1.0.0');
         $this->writeLicenseFile([
@@ -90,7 +90,7 @@ final class PluginLicenseTest extends TestCase
     }
 
     #[Test]
-    public function constructor_inactive(): void
+    public function shows_a_missing_badge_without_a_stored_license(): void
     {
         $status = $this->createLicense()->status()->toArray();
 
@@ -100,7 +100,7 @@ final class PluginLicenseTest extends TestCase
     }
 
     #[Test]
-    public function constructor_invalid(): void
+    public function shows_an_invalid_badge_for_a_malformed_key(): void
     {
         $this->writeLicenseFile([
             'licenseKey' => 'INVALID-KEY',
@@ -116,7 +116,7 @@ final class PluginLicenseTest extends TestCase
     }
 
     #[Test]
-    public function constructor_incompatible(): void
+    public function shows_an_incompatible_badge_when_the_license_does_not_cover_the_plugin_version(): void
     {
         $this->registerPlugin('1.0.0');
         $this->writeLicenseFile([
@@ -133,7 +133,7 @@ final class PluginLicenseTest extends TestCase
     }
 
     #[Test]
-    public function constructor_upgradeable(): void
+    public function shows_an_upgradeable_badge_when_the_plugin_outgrew_the_license(): void
     {
         $this->registerPlugin('2.0.0');
         $this->writeLicenseFile([

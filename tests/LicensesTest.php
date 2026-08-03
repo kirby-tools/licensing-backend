@@ -50,7 +50,7 @@ final class LicensesTest extends TestCase
     }
 
     #[Test]
-    public function read_with_no_license_file(): void
+    public function reports_inactive_when_no_license_file_exists(): void
     {
         $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
 
@@ -60,7 +60,7 @@ final class LicensesTest extends TestCase
     }
 
     #[Test]
-    public function get_status_active(): void
+    public function reports_active_for_a_valid_compatible_license(): void
     {
         App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
 
@@ -77,14 +77,14 @@ final class LicensesTest extends TestCase
     }
 
     #[Test]
-    public function get_status_inactive(): void
+    public function reports_inactive_for_an_unlicensed_package(): void
     {
         $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
         $this->assertEquals('inactive', $licenses->getStatus());
     }
 
     #[Test]
-    public function get_status_invalid(): void
+    public function reports_invalid_for_a_malformed_key(): void
     {
         file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
@@ -98,7 +98,7 @@ final class LicensesTest extends TestCase
     }
 
     #[Test]
-    public function get_status_incompatible(): void
+    public function reports_incompatible_when_the_license_does_not_cover_the_plugin_version(): void
     {
         App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
 
@@ -115,7 +115,7 @@ final class LicensesTest extends TestCase
     }
 
     #[Test]
-    public function get_status_upgradeable(): void
+    public function reports_upgradeable_when_the_plugin_outgrew_the_license(): void
     {
         App::plugin(name: 'test/licensed', extends: [], info: ['version' => '2.0.0'], version: '2.0.0');
 
@@ -132,7 +132,7 @@ final class LicensesTest extends TestCase
     }
 
     #[Test]
-    public function get_license_returns_array_with_valid_key(): void
+    public function exposes_key_generation_and_compatibility_for_a_valid_license(): void
     {
         file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
@@ -153,7 +153,7 @@ final class LicensesTest extends TestCase
     }
 
     #[Test]
-    public function get_license_returns_null_with_invalid_key(): void
+    public function returns_no_license_data_for_a_malformed_key(): void
     {
         file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/package' => [

@@ -46,7 +46,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function activate_successfully(): void
+    public function marks_the_license_active_when_the_api_confirms_the_key(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -80,7 +80,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function activate_with_wrong_package_name(): void
+    public function throws_when_the_key_belongs_to_another_package(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -115,7 +115,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function activate_with_incompatible_version(): void
+    public function throws_when_the_key_does_not_cover_the_installed_plugin_version(): void
     {
         // Register a plugin with version 2.0.0 that's incompatible with license ^1.0.0
         App::plugin(
@@ -151,7 +151,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function activate_with_api_error(): void
+    public function throws_when_the_api_reports_an_error(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -181,7 +181,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function activation_updates_license_file(): void
+    public function persists_key_and_compatibility_to_the_license_file(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -222,7 +222,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function activate_from_request_missing_email(): void
+    public function throws_when_the_request_lacks_an_email(): void
     {
         $repository = new LicenseRepository();
         $validator = new LicenseValidator('test/package');
@@ -245,7 +245,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function activate_from_request_missing_license_key(): void
+    public function throws_when_the_request_lacks_a_license_key(): void
     {
         $repository = new LicenseRepository();
         $validator = new LicenseValidator('test/package');
@@ -268,7 +268,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function activate_from_request_falls_back_to_order_id(): void
+    public function falls_back_to_the_order_id_an_older_plugin_sends(): void
     {
         App::plugin(
             name: 'test/package',
@@ -306,7 +306,7 @@ final class LicenseActivationTest extends TestCase
     }
 
     #[Test]
-    public function activate_throws_exception_when_already_activated(): void
+    public function throws_when_the_license_is_already_activated(): void
     {
         App::plugin(
             name: 'test/package',
