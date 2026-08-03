@@ -58,7 +58,7 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
-    public function treats_a_null_compatibility_as_not_upgradeable(): void
+    public function treats_a_missing_compatibility_as_not_upgradeable(): void
     {
         App::plugin(
             name: 'test/package',
@@ -70,21 +70,7 @@ final class LicenseValidatorTest extends TestCase
         $validator = new LicenseValidator('test/package');
 
         $this->assertFalse($validator->isUpgradeable(null));
-    }
-
-    #[Test]
-    public function treats_an_empty_compatibility_as_outgrown_by_any_installed_version(): void
-    {
-        App::plugin(
-            name: 'test/package',
-            extends: [],
-            info: ['version' => '1.5.0'],
-            version: '1.5.0'
-        );
-
-        $validator = new LicenseValidator('test/package');
-
-        $this->assertTrue($validator->isUpgradeable(''));
+        $this->assertFalse($validator->isUpgradeable(''));
     }
 
     #[Test]
@@ -115,6 +101,24 @@ final class LicenseValidatorTest extends TestCase
     }
 
     #[Test]
+    public function reads_the_licensed_major_from_tilde_and_exact_constraints(): void
+    {
+        App::plugin(
+            name: 'test/package',
+            extends: [],
+            info: ['version' => '2.0.0'],
+            version: '2.0.0'
+        );
+
+        $validator = new LicenseValidator('test/package');
+
+        $this->assertTrue($validator->isUpgradeable('~1.2'));
+        $this->assertTrue($validator->isUpgradeable('1.2.3'));
+        $this->assertFalse($validator->isUpgradeable('~2.0'));
+        $this->assertFalse($validator->isUpgradeable('^1 || ~2.0'));
+    }
+
+    #[Test]
     public function is_never_compatible_without_an_installed_plugin(): void
     {
         $validator = new LicenseValidator('test/package');
@@ -138,5 +142,23 @@ final class LicenseValidatorTest extends TestCase
 
         $this->assertTrue($validator->isCompatible('^1.0.0'));
         $this->assertFalse($validator->isCompatible('^2.0.0'));
+    }
+
+    #[Test]
+    public function is_never_compatible_with_an_unparsable_constraint(): void
+    {
+        App::plugin(
+            name: 'test/package',
+            extends: [],
+            info: ['version' => '1.5.0'],
+            version: '1.5.0'
+        );
+
+        $validator = new LicenseValidator('test/package');
+
+        $this->assertFalse($validator->isCompatible(''));
+        $this->assertFalse($validator->isCompatible('   '));
+        $this->assertFalse($validator->isCompatible('invalid'));
+        $this->assertFalse($validator->isCompatible('^1 || '));
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace JohannSchopplich\Licensing;
 
 use Composer\Semver\Semver;
+use UnexpectedValueException;
 
 /**
  * @link      https://kirby.tools
@@ -35,9 +36,17 @@ final class LicenseValidator
     {
         $version = $this->getPluginVersion();
 
-        return $versionConstraint !== null &&
-            $version !== null &&
-            Semver::satisfies($version, $versionConstraint);
+        if ($versionConstraint === null || $version === null) {
+            return false;
+        }
+
+        try {
+            return Semver::satisfies($version, $versionConstraint);
+        } catch (UnexpectedValueException) {
+            // A hand-edited or truncated license file can hold a constraint
+            // Composer cannot parse, which must not escape as a fatal error
+            return false;
+        }
     }
 
     /**
@@ -54,16 +63,19 @@ final class LicenseValidator
             return false;
         }
 
-        // Compatibility constraints are always caret ranges like `^1 || ^2`;
-        // anything else contributes no licensed major
-        $constraints = explode('||', $versionConstraint);
-        $maxLicensedMajor = 0;
+        // The licensing API validates compatibility as `||`-separated caret, tilde
+        // or exact versions, so each alternative opens with the major it licenses
+        $maxLicensedMajor = null;
 
-        foreach ($constraints as $constraint) {
-            $constraint = trim($constraint);
-            if (preg_match('/\^(\d+)/', $constraint, $matches)) {
-                $maxLicensedMajor = max($maxLicensedMajor, (int)$matches[1]);
+        foreach (explode('||', $versionConstraint) as $constraint) {
+            if (preg_match('/^[\^~]?(\d+)/', trim($constraint), $matches)) {
+                $maxLicensedMajor = max($maxLicensedMajor ?? 0, (int)$matches[1]);
             }
+        }
+
+        // A constraint naming no major at all cannot have been outgrown
+        if ($maxLicensedMajor === null) {
+            return false;
         }
 
         if (preg_match('/^(\d+)\./', $version, $matches)) {
