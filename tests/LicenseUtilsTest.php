@@ -35,13 +35,10 @@ final class LicenseUtilsTest extends TestCase
     #[Test]
     public function formats_a_constraint_set_as_a_version_range(): void
     {
-        // Single version
         $this->assertEquals('v1', LicenseUtils::formatCompatibility('^1'));
 
-        // Two versions
         $this->assertEquals("v1\u{2013}v2", LicenseUtils::formatCompatibility('^1 || ^2'));
 
-        // Three or more versions
         $this->assertEquals("v1\u{2013}v3", LicenseUtils::formatCompatibility('^1 || ^2 || ^3'));
     }
 }

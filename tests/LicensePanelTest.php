@@ -50,7 +50,7 @@ final class LicensePanelTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        // Kirby runs these handlers under its own `Api` scope, not the handler's own class
+        // Kirby runs these handlers under its own `Api` scope, not the handler's own class.
         $handler->call($this->app->api());
     }
 }

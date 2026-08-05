@@ -36,7 +36,6 @@ final class LicensesTest extends TestCase
             ]
         ]);
 
-        // Create a mock HTTP client that returns empty responses
         $this->mockHttpClient = $this->createMock(HttpClientInterface::class);
     }
 
@@ -145,7 +144,7 @@ final class LicensesTest extends TestCase
             'test/package' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
                 'licenseCompatibility' => '^1.0.0',
-                'pluginVersion' => null, // Use null to prevent refresh
+                'pluginVersion' => null, // Use null to prevent refresh.
                 'createdAt' => '2024-01-01T00:00:00Z'
             ]
         ]));

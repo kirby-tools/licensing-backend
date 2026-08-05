@@ -19,7 +19,7 @@ use Throwable;
 final class LicensePanel
 {
     /**
-     * Maps exception messages from license activation to translation keys.
+     * Translation keys for license activation failures, keyed by exception message.
      *
      * The keys are matched verbatim: they come either from `LicenseActivator`
      * or, like `Unauthorized`, from the licensing API's error response. An
@@ -64,7 +64,7 @@ final class LicensePanel
         $pluginId = LicenseUtils::toPluginId($packageName);
 
         return [
-            // Reached from `PluginLicense::toKirbyStatus` for active, upgradeable and incompatible licenses
+            // Reached from `PluginLicense::toKirbyStatus` for active, upgradeable and incompatible licenses.
             "{$dialogPrefix}/license" => [
                 'load' => function () use ($packageName, $pluginId, $pluginLabel) {
                     $licenses = Licenses::read($packageName);
@@ -157,7 +157,7 @@ final class LicensePanel
                 }
             ],
 
-            // Reached from `PluginLicense::toKirbyStatus` for inactive and invalid licenses
+            // Reached from `PluginLicense::toKirbyStatus` for inactive and invalid licenses.
             "{$dialogPrefix}/activate" => [
                 'load' => function () {
                     return [

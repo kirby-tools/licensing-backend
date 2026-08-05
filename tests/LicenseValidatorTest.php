@@ -94,9 +94,7 @@ final class LicenseValidatorTest extends TestCase
 
         $validator = new LicenseValidator('test/package');
 
-        // Plugin is v2.0.0, license supports ^1.0.0 → upgradeable
         $this->assertTrue($validator->isUpgradeable('^1.0.0'));
-        // Plugin is v2.0.0, license supports ^2.0.0 → not upgradeable (already compatible)
         $this->assertFalse($validator->isUpgradeable('^2.0.0'));
     }
 

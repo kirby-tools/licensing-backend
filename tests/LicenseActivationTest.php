@@ -25,7 +25,6 @@ final class LicenseActivationTest extends TestCase
 
     protected function setUp(): void
     {
-        // Initialize Kirby application with custom license file path
         $this->app = new App([
             'roots' => [
                 'index' => __DIR__,
@@ -89,7 +88,6 @@ final class LicenseActivationTest extends TestCase
             version: '1.0.0'
         );
 
-        // Set up API response with wrong package name
         $this->mockHttpClient->method('request')->willReturn([
             'packageName' => 'wrong/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
@@ -117,7 +115,6 @@ final class LicenseActivationTest extends TestCase
     #[Test]
     public function throws_naming_the_upgrade_when_the_plugin_outgrew_the_license(): void
     {
-        // Register a plugin with version 2.0.0 that's incompatible with license ^1.0.0
         App::plugin(
             name: 'simple/package',
             extends: [],
@@ -125,11 +122,10 @@ final class LicenseActivationTest extends TestCase
             version: '2.0.0'
         );
 
-        // Set up API response with incompatible license version
         $this->mockHttpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
-            'licenseCompatibility' => '^1.0.0', // Only supports 1.x
+            'licenseCompatibility' => '^1.0.0', // Only supports 1.x.
             'order' => [
                 'createdAt' => '2024-01-01T00:00:00Z'
             ]
@@ -160,7 +156,6 @@ final class LicenseActivationTest extends TestCase
             version: '1.0.0'
         );
 
-        // Mock API error response
         $this->mockHttpClient->method('request')->willReturn([
             'error' => 'License not found'
         ]);
@@ -190,7 +185,6 @@ final class LicenseActivationTest extends TestCase
             version: '1.0.0'
         );
 
-        // Mock successful HTTP response
         $this->mockHttpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
@@ -211,10 +205,8 @@ final class LicenseActivationTest extends TestCase
 
         $activator->activate('test@example.com', '123456');
 
-        // Verify license file was created
         $this->assertFileExists(self::LICENSE_FILE);
 
-        // Verify license data was saved correctly
         $savedData = json_decode(file_get_contents(self::LICENSE_FILE), true);
         $this->assertArrayHasKey('simple/package', $savedData);
         $this->assertEquals('KT1-ABC123-DEF456', $savedData['simple/package']['licenseKey']);
@@ -233,7 +225,6 @@ final class LicenseActivationTest extends TestCase
             $this->mockHttpClient
         );
 
-        // Create a request that's missing email
         $request = new Request([
             'body' => ['licenseKey' => 'KT2-xxxxx-xxxxx']
         ]);
@@ -256,7 +247,6 @@ final class LicenseActivationTest extends TestCase
             $this->mockHttpClient
         );
 
-        // Create a request that's missing license key
         $request = new Request([
             'body' => ['email' => 'test@example.com']
         ]);
@@ -295,7 +285,6 @@ final class LicenseActivationTest extends TestCase
             $this->mockHttpClient
         );
 
-        // Simulate a request from an older plugin version that sends `orderId`
         $request = new Request([
             'body' => ['email' => 'test@example.com', 'orderId' => '12345-67890']
         ]);
@@ -315,7 +304,6 @@ final class LicenseActivationTest extends TestCase
             version: '1.0.0'
         );
 
-        // Create a license file with an already activated license
         file_put_contents(self::LICENSE_FILE, json_encode([
             'test/package' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
