@@ -23,13 +23,7 @@ final class LicensePanelTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->app = new App([
-            'roots' => [
-                'index' => __DIR__,
-                'license' => __DIR__ . '/.license'
-            ],
-            'translations' => LicensePanel::translations()
-        ]);
+        $this->app = $this->bootApp();
     }
 
     protected function tearDown(): void
@@ -39,6 +33,18 @@ final class LicensePanelTest extends TestCase
         }
 
         App::destroy();
+    }
+
+    private function bootApp(array $props = []): App
+    {
+        return $this->app = new App([
+            'roots' => [
+                'index' => __DIR__,
+                'license' => __DIR__ . '/.license'
+            ],
+            'translations' => LicensePanel::translations(),
+            ...$props
+        ]);
     }
 
     public static function activationHandlers(): array
@@ -133,5 +139,21 @@ final class LicensePanelTest extends TestCase
         I18n::$locale = fn (): string => 'es_ES';
 
         $this->assertSame('Activar ahora', LicensePanel::statusLabel(LicenseStatus::Inactive));
+    }
+
+    #[Test]
+    public function dialogs_label_their_fields_from_the_fallback_locale_I18n_cached_without_plugin_keys(): void
+    {
+        $translations = LicensePanel::translations();
+        unset($translations['de']['kirby-tools.license.activate.email']);
+        $this->bootApp(['translations' => $translations]);
+
+        I18n::$locale = fn (): string => 'de';
+        I18n::$translations = ['en' => ['error.page.undefined' => 'The page cannot be found']];
+
+        $load = LicensePanel::dialogs('johannschopplich/test-plugin', 'Test Plugin')['johannschopplich-test-plugin/activate']['load'];
+        $dialog = $load->call(new Route('', 'GET', $load));
+
+        $this->assertSame('Email', $dialog['props']['fields']['email']['label']);
     }
 }

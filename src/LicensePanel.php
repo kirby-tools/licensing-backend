@@ -463,9 +463,12 @@ final class LicensePanel
 
         self::$repairedApp = $kirby;
 
-        // `I18n::translate()` falls through to the fallback locales, so a stale
-        // cache yields another language's string instead of `null`.
-        if (isset(I18n::translation(I18n::locale())['kirby-tools.license.status.active']) === false) {
+        $key = 'kirby-tools.license.status.' . LicenseStatus::Active->value;
+
+        // A stale cache is invisible to `I18n::translate()`, which falls through
+        // to the fallback locales; `en` terminates that chain, so it is probed too.
+        if (isset(I18n::translation(I18n::locale())[$key]) === false ||
+            isset(I18n::translation('en')[$key]) === false) {
             I18n::$translations = [];
         }
     }
