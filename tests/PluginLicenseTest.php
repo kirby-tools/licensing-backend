@@ -154,8 +154,6 @@ final class PluginLicenseTest extends TestCase
     public function translates_the_status_label_into_the_locale_I18n_cached_without_plugin_keys(): void
     {
         I18n::$locale = fn (): string => 'de';
-        // `I18n::translation()` counts only a non-empty entry as a cache hit, so
-        // the frozen locale keeps a core key.
         I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];
 
         $status = $this->createLicense()->status()->toArray();
