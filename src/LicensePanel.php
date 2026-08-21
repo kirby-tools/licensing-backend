@@ -34,7 +34,7 @@ final class LicensePanel
         'License key not valid for this plugin version, please upgrade your license' => 'kirby-tools.license.error.upgradeable'
     ];
 
-    private static App|null $repairedApp = null;
+    private static App|null $checkedApp = null;
 
     public static function api(string $packageName): array
     {
@@ -228,6 +228,31 @@ final class LicensePanel
         $label = I18n::translate($key);
 
         return is_string($label) ? $label : (self::translations()['en'][$key] ?? $status->value);
+    }
+
+    /**
+     * Drops the translation cache when Kirby filled it before the plugins
+     * registered their strings. Public because Kirby rebinds the calling
+     * handlers to its own scopes, where `self::` no longer means this class.
+     */
+    public static function repairTranslationCache(): void
+    {
+        $kirby = App::instance(null, true);
+
+        if ($kirby === null || self::$checkedApp === $kirby) {
+            return;
+        }
+
+        self::$checkedApp = $kirby;
+
+        $key = 'kirby-tools.license.status.' . LicenseStatus::Active->value;
+
+        // A stale cache is invisible to `I18n::translate()`, which falls through
+        // to the fallback locales; `en` terminates that chain, so it is probed too.
+        if (isset(I18n::translation(I18n::locale())[$key]) === false ||
+            isset(I18n::translation('en')[$key]) === false) {
+            I18n::$translations = [];
+        }
     }
 
     public static function translations(): array
@@ -444,32 +469,5 @@ final class LicensePanel
                 'kirby-tools.license.error.upgradeable' => 'Licenza non valida per questa versione del plugin. Aggiorna la tua licenza.'
             ]
         ];
-    }
-
-    /**
-     * Reloads the translations Kirby cached during plugin loading, before any
-     * plugin had registered its own strings.
-     *
-     * Public because the Panel handlers that call it run rebound to Kirby's own
-     * route and API scopes.
-     */
-    public static function repairTranslationCache(): void
-    {
-        $kirby = App::instance(null, true);
-
-        if ($kirby === null || self::$repairedApp === $kirby) {
-            return;
-        }
-
-        self::$repairedApp = $kirby;
-
-        $key = 'kirby-tools.license.status.' . LicenseStatus::Active->value;
-
-        // A stale cache is invisible to `I18n::translate()`, which falls through
-        // to the fallback locales; `en` terminates that chain, so it is probed too.
-        if (isset(I18n::translation(I18n::locale())[$key]) === false ||
-            isset(I18n::translation('en')[$key]) === false) {
-            I18n::$translations = [];
-        }
     }
 }
