@@ -74,9 +74,10 @@ final class LicensePanelTest extends LicenseTestCase
         ];
     }
 
-    public static function panelLocalesWithCountryCode(): array
+    public static function spanishAndPortugueseLocales(): array
     {
         return [
+            'spanish without a country code' => ['es', 'Activar ahora'],
             'european spanish' => ['es_ES', 'Activar ahora'],
             'latin american spanish' => ['es_419', 'Activar ahora'],
             'european portuguese' => ['pt_PT', 'Ativar agora']
@@ -131,8 +132,8 @@ final class LicensePanelTest extends LicenseTestCase
     }
 
     #[Test]
-    #[DataProvider('panelLocalesWithCountryCode')]
-    public function status_label_translates_into_a_panel_locale_with_a_country_code(
+    #[DataProvider('spanishAndPortugueseLocales')]
+    public function status_label_translates_into_a_spanish_or_portuguese_panel_locale(
         string $locale,
         string $expected
     ): void {

@@ -512,6 +512,7 @@ final class LicensePanel
                 'kirby-tools.license.error.incompatible' => 'Licença não válida para esta versão do plugin',
                 'kirby-tools.license.error.upgradeable' => 'Licença não válida para esta versão do plugin. Por favor, atualize a sua licença.'
             ],
+            'es' => $spanish,
             'es_ES' => $spanish,
             'es_419' => $spanish
         ];
