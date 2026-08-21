@@ -153,4 +153,23 @@ final class LicensesTest extends LicenseTestCase
         $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
         $this->assertNull($licenses->getLicense());
     }
+
+    #[Test]
+    public function reports_no_read_error_when_the_license_file_does_not_exist(): void
+    {
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+
+        $this->assertNull($licenses->getReadError());
+    }
+
+    #[Test]
+    public function reports_a_read_error_when_the_license_file_cannot_be_parsed(): void
+    {
+        file_put_contents(self::LICENSE_FILE_PATH, '{ this is not json');
+
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+
+        $this->assertNotNull($licenses->getReadError());
+        $this->assertSame('inactive', $licenses->getStatus());
+    }
 }

@@ -189,6 +189,18 @@ final class LicensePanelTest extends LicenseTestCase
     }
 
     #[Test]
+    public function activate_dialog_says_so_when_the_license_file_cannot_be_read(): void
+    {
+        file_put_contents(self::LICENSE_FILE_PATH, '{ this is not json');
+
+        $load = LicensePanel::dialogs(self::PACKAGE_NAME, 'Test Plugin')['johannschopplich-test-plugin/activate']['load'];
+        $dialog = $load->call(new Route('', 'GET', $load));
+
+        $this->assertSame('negative', $dialog['props']['fields']['info']['theme']);
+        $this->assertStringContainsString('could not be read', $dialog['props']['fields']['info']['text']);
+    }
+
+    #[Test]
     #[DataProvider('activationHandlers')]
     public function activation_handler_keeps_the_cause_when_it_translates_a_failure(
         Closure $handler,

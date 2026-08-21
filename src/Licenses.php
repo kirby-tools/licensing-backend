@@ -100,6 +100,15 @@ final class Licenses
         ];
     }
 
+    /**
+     * Why the license file could not be read, or `null` when there was nothing
+     * to read.
+     */
+    public function getReadError(): string|null
+    {
+        return $this->repository->getReadError();
+    }
+
     public function isActivated(): bool
     {
         return $this->activator->isActivated();

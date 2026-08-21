@@ -160,15 +160,27 @@ final class LicensePanel
 
             // Reached from `PluginLicense::toKirbyStatus` for inactive and invalid licenses.
             "{$dialogPrefix}/activate" => [
-                'load' => function () {
+                'load' => function () use ($packageName) {
+                    $info = [
+                        'type' => 'info',
+                        'text' => I18n::translate('kirby-tools.license.activate.info')
+                    ];
+
+                    // A license file that exists but cannot be parsed leaves the
+                    // status at `inactive`, which reads as "never activated".
+                    if (Licenses::read($packageName)->getReadError() !== null) {
+                        $info = [
+                            'type' => 'info',
+                            'theme' => 'negative',
+                            'text' => I18n::translate('kirby-tools.license.activate.unreadable')
+                        ];
+                    }
+
                     return [
                         'component' => 'k-form-dialog',
                         'props' => [
                             'fields' => [
-                                'info' => [
-                                    'type' => 'info',
-                                    'text' => I18n::translate('kirby-tools.license.activate.info')
-                                ],
+                                'info' => $info,
                                 'email' => [
                                     'label' => I18n::translate('kirby-tools.license.activate.email'),
                                     'type' => 'email',
@@ -311,6 +323,7 @@ final class LicensePanel
             'kirby-tools.license.status.upgradeable' => 'Actualización de licencia disponible',
 
             'kirby-tools.license.activate.info' => 'Introduce los datos de tu licencia para activar el plugin.',
+            'kirby-tools.license.activate.unreadable' => 'El archivo de licencia existe pero no se pudo leer. Una nueva activación lo reemplaza, incluidas las licencias de otros plugins que contenga.',
             'kirby-tools.license.activate.email' => 'Correo electrónico',
             'kirby-tools.license.activate.licenseKey' => 'Clave de licencia',
             'kirby-tools.license.activate.licenseKey.help' => 'Encuentra tu clave de licencia en el correo de confirmación de pedido o en <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
@@ -343,6 +356,7 @@ final class LicensePanel
                 'kirby-tools.license.status.upgradeable' => 'License upgrade available',
 
                 'kirby-tools.license.activate.info' => 'Enter your license details to activate the plugin.',
+                'kirby-tools.license.activate.unreadable' => 'The license file exists but could not be read. Reactivating replaces it, including any licenses it holds for other plugins.',
                 'kirby-tools.license.activate.email' => 'Email',
                 'kirby-tools.license.activate.licenseKey' => 'License Key',
                 'kirby-tools.license.activate.licenseKey.help' => 'Find your license key in your order confirmation email or at <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
@@ -373,6 +387,7 @@ final class LicensePanel
                 'kirby-tools.license.status.upgradeable' => 'Lizenz-Upgrade verfügbar',
 
                 'kirby-tools.license.activate.info' => 'Gib deine Lizenzdaten ein, um das Plugin zu aktivieren.',
+                'kirby-tools.license.activate.unreadable' => 'Die Lizenzdatei existiert, konnte aber nicht gelesen werden. Eine erneute Aktivierung ersetzt sie samt aller darin gespeicherten Lizenzen anderer Plugins.',
                 'kirby-tools.license.activate.email' => 'E-Mail',
                 'kirby-tools.license.activate.licenseKey' => 'Lizenzschlüssel',
                 'kirby-tools.license.activate.licenseKey.help' => 'Den Lizenzschlüssel findest du in deiner Bestellbestätigung per E-Mail oder auf <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
@@ -403,6 +418,7 @@ final class LicensePanel
                 'kirby-tools.license.status.upgradeable' => 'Mise à niveau de licence disponible',
 
                 'kirby-tools.license.activate.info' => 'Entrez vos informations de licence pour activer le plugin.',
+                'kirby-tools.license.activate.unreadable' => 'Le fichier de licence existe mais n\'a pas pu être lu. Une nouvelle activation le remplace, y compris les licences d\'autres plugins qu\'il contient.',
                 'kirby-tools.license.activate.email' => 'E-mail',
                 'kirby-tools.license.activate.licenseKey' => 'Clé de licence',
                 'kirby-tools.license.activate.licenseKey.help' => 'Retrouvez votre clé de licence dans votre e-mail de confirmation de commande ou sur <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
@@ -433,6 +449,7 @@ final class LicensePanel
                 'kirby-tools.license.status.upgradeable' => 'Licentie-upgrade beschikbaar',
 
                 'kirby-tools.license.activate.info' => 'Voer je licentiegegevens in om de plugin te activeren.',
+                'kirby-tools.license.activate.unreadable' => 'Het licentiebestand bestaat, maar kon niet worden gelezen. Opnieuw activeren vervangt het, inclusief licenties van andere plugins die erin staan.',
                 'kirby-tools.license.activate.email' => 'E-mail',
                 'kirby-tools.license.activate.licenseKey' => 'Licentiesleutel',
                 'kirby-tools.license.activate.licenseKey.help' => 'Je licentiesleutel vind je in je bestelbevestiging per e-mail of op <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
@@ -463,6 +480,7 @@ final class LicensePanel
                 'kirby-tools.license.status.upgradeable' => 'Aggiornamento licenza disponibile',
 
                 'kirby-tools.license.activate.info' => 'Inserisci i dati della tua licenza per attivare il plugin.',
+                'kirby-tools.license.activate.unreadable' => 'Il file di licenza esiste ma non è stato possibile leggerlo. Una nuova attivazione lo sostituisce, incluse le licenze di altri plugin che contiene.',
                 'kirby-tools.license.activate.email' => 'Email',
                 'kirby-tools.license.activate.licenseKey' => 'Chiave di licenza',
                 'kirby-tools.license.activate.licenseKey.help' => 'Trova la tua chiave di licenza nell\'e-mail di conferma dell\'ordine o su <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
@@ -493,6 +511,7 @@ final class LicensePanel
                 'kirby-tools.license.status.upgradeable' => 'Atualização de licença disponível',
 
                 'kirby-tools.license.activate.info' => 'Introduza os dados da sua licença para ativar o plugin.',
+                'kirby-tools.license.activate.unreadable' => 'O ficheiro de licença existe mas não foi possível lê-lo. Uma nova ativação substitui-o, incluindo quaisquer licenças de outros plugins que contenha.',
                 'kirby-tools.license.activate.email' => 'E-mail',
                 'kirby-tools.license.activate.licenseKey' => 'Chave de licença',
                 'kirby-tools.license.activate.licenseKey.help' => 'Encontre a sua chave de licença no e-mail de confirmação da encomenda ou em <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',

@@ -22,6 +22,7 @@ final class LicenseRepository
 
     private readonly string $licenseFile;
     private array|null $cache = null;
+    private string|null $readError = null;
 
     public function __construct()
     {
@@ -34,13 +35,30 @@ final class LicenseRepository
             return $this->cache;
         }
 
+        if (file_exists($this->licenseFile) === false) {
+            return $this->cache = [];
+        }
+
         try {
             $this->cache = Json::read($this->licenseFile);
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            $this->readError = $e->getMessage();
             $this->cache = [];
         }
 
         return $this->cache;
+    }
+
+    /**
+     * Why the license file could not be read, or `null` when there was nothing
+     * to read. Distinguishes a site that was never licensed from one whose
+     * license file is corrupt or unreadable — both leave `readAll()` empty.
+     */
+    public function getReadError(): string|null
+    {
+        $this->readAll();
+
+        return $this->readError;
     }
 
     public function get(string $packageName): array|null
