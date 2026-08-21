@@ -243,17 +243,18 @@ final class LicensePanel
         $message = $e->getMessage();
         $translationKey = self::ACTIVATION_ERROR_KEYS[$message] ?? null;
 
-        // `message:` would make Kirby's constructor return before it stores
+        // `message` would make Kirby 5's constructor return before it stores
         // `previous`, so the text goes in as an untranslated fallback instead.
-        return new InvalidArgumentException(
-            fallback: $translationKey ? I18n::translate($translationKey) : $message,
-            details: [
+        // TODO: Drop K4 compat in v1 – use named arguments once Kirby 5 is the floor.
+        return new InvalidArgumentException([
+            'fallback' => $translationKey ? I18n::translate($translationKey) : $message,
+            'details' => [
                 'package' => $packageName,
                 'cause' => $e->getCode() ?: $e::class
             ],
-            previous: $e,
-            translate: false
-        );
+            'previous' => $e,
+            'translate' => false
+        ]);
     }
 
     /**
