@@ -52,12 +52,7 @@ final class LicensePanel
                         $licenses = Licenses::read($packageName);
                         return $licenses->activateFromRequest();
                     } catch (Throwable $e) {
-                        $message = $e->getMessage();
-                        $translationKey = LicensePanel::ACTIVATION_ERROR_KEYS[$message] ?? null;
-
-                        throw new InvalidArgumentException(
-                            $translationKey ? I18n::translate($translationKey) : $message
-                        );
+                        throw LicensePanel::activationFailure($e, $packageName);
                     }
                 })
             ]
@@ -199,12 +194,7 @@ final class LicensePanel
                         $licenses = Licenses::read($packageName);
                         $licenses->activateFromRequest();
                     } catch (Throwable $e) {
-                        $message = $e->getMessage();
-                        $translationKey = LicensePanel::ACTIVATION_ERROR_KEYS[$message] ?? null;
-
-                        throw new InvalidArgumentException(
-                            $translationKey ? I18n::translate($translationKey) : $message
-                        );
+                        throw LicensePanel::activationFailure($e, $packageName);
                     }
 
                     return [
@@ -230,6 +220,31 @@ final class LicensePanel
         $label = I18n::translate($key);
 
         return is_string($label) ? $label : (self::translations()['en'][$key] ?? $status->value);
+    }
+
+    /**
+     * Translates an activation failure for the Panel, keeping the cause attached.
+     *
+     * `details` reaches the Panel even with debug off, so it carries only the
+     * package and the cause's key — never the licensing API's response body.
+     * Public for the same reason as `repairTranslationCache()`.
+     */
+    public static function activationFailure(Throwable $e, string $packageName): InvalidArgumentException
+    {
+        $message = $e->getMessage();
+        $translationKey = self::ACTIVATION_ERROR_KEYS[$message] ?? null;
+
+        // `message:` would make Kirby's constructor return before it stores
+        // `previous`, so the text goes in as an untranslated fallback instead.
+        return new InvalidArgumentException(
+            fallback: $translationKey ? I18n::translate($translationKey) : $message,
+            details: [
+                'package' => $packageName,
+                'cause' => $e->getCode() ?: $e::class
+            ],
+            previous: $e,
+            translate: false
+        );
     }
 
     /**

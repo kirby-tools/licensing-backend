@@ -7,6 +7,7 @@ use JohannSchopplich\Licensing\LicenseStatus;
 use Kirby\Cms\Api;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
+use Kirby\Exception\LogicException;
 use Kirby\Http\Route;
 use Kirby\Toolkit\I18n;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -36,6 +37,19 @@ final class LicensePanelTest extends LicenseTestCase
                 'query' => ['email' => 'test@example.com', 'licenseKey' => $licenseKey]
             ]
         ]);
+    }
+
+    private function registerActivatedPlugin(string $licenseKey): void
+    {
+        App::plugin(name: self::PACKAGE_NAME, extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
+
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
+            self::PACKAGE_NAME => [
+                'licenseKey' => $licenseKey,
+                'licenseCompatibility' => '^1.0.0',
+                'pluginVersion' => '1.0.0'
+            ]
+        ]));
     }
 
     public static function activationHandlers(): array
@@ -108,14 +122,7 @@ final class LicensePanelTest extends LicenseTestCase
 
         $this->appWithActivationRequest($licenseKey);
 
-        App::plugin(name: self::PACKAGE_NAME, extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
-        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
-            self::PACKAGE_NAME => [
-                'licenseKey' => $licenseKey,
-                'licenseCompatibility' => '^1.0.0',
-                'pluginVersion' => '1.0.0'
-            ]
-        ]));
+        $this->registerActivatedPlugin($licenseKey);
 
         I18n::$locale = fn (): string => 'de';
         I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];
@@ -179,5 +186,28 @@ final class LicensePanelTest extends LicenseTestCase
         I18n::$locale = fn (): string => 'fr';
 
         $this->assertSame('Sous licence', LicensePanel::statusLabel(LicenseStatus::Active));
+    }
+
+    #[Test]
+    #[DataProvider('activationHandlers')]
+    public function activation_handler_keeps_the_cause_when_it_translates_a_failure(
+        Closure $handler,
+        Closure $scope
+    ): void {
+        $licenseKey = 'KT1-ABC123-DEF456';
+
+        $this->appWithActivationRequest($licenseKey);
+        $this->registerActivatedPlugin($licenseKey);
+
+        try {
+            $handler->call($scope());
+        } catch (InvalidArgumentException $e) {
+            $this->assertInstanceOf(LogicException::class, $e->getPrevious());
+            $this->assertSame(self::PACKAGE_NAME, $e->getDetails()['package']);
+
+            return;
+        }
+
+        $this->fail('The handler did not report the failure.');
     }
 }
