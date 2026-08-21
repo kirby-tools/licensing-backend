@@ -209,6 +209,26 @@ final class LicensePanel
         ];
     }
 
+    /**
+     * Translates the status label, dropping the translation cache when a lookup
+     * during plugin loading froze it before any plugin registered its strings.
+     */
+    public static function statusLabel(LicenseStatus $status): string
+    {
+        $key = 'kirby-tools.license.status.' . $status->value;
+        $locale = I18n::locale();
+
+        // `I18n::translate()` falls through to the fallback locales, so a frozen
+        // locale yields another language's string instead of `null`.
+        if (isset(I18n::translation($locale)[$key]) === false) {
+            I18n::$translations = [];
+        }
+
+        $label = I18n::translate($key);
+
+        return is_string($label) ? $label : self::translations()['en'][$key];
+    }
+
     public static function translations(): array
     {
         return [
