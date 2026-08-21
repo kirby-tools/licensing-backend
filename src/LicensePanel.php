@@ -168,7 +168,7 @@ final class LicensePanel
 
                     // A license file that exists but cannot be parsed leaves the
                     // status at `inactive`, which reads as "never activated".
-                    if (Licenses::read($packageName)->getReadError() !== null) {
+                    if ((new Licenses($packageName))->getReadError() !== null) {
                         $info = [
                             'type' => 'info',
                             'theme' => 'negative',
