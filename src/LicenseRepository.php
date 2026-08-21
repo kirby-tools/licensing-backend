@@ -49,11 +49,6 @@ final class LicenseRepository
         return $this->cache;
     }
 
-    /**
-     * Why the license file could not be read, or `null` when there was nothing
-     * to read. Distinguishes a site that was never licensed from one whose
-     * license file is corrupt or unreadable — both leave `readAll()` empty.
-     */
     public function getReadError(): string|null
     {
         $this->readAll();

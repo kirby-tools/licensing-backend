@@ -216,8 +216,6 @@ final class LicensePanel
             ]
         ];
 
-        // Mapping over the handlers here means a dialog added later cannot
-        // forget the repair.
         return array_map(
             fn (array $dialog): array => array_map(self::repairingTranslationCache(...), $dialog),
             $dialogs
@@ -237,9 +235,8 @@ final class LicensePanel
     /**
      * Translates an activation failure for the Panel, keeping the cause attached.
      *
-     * `details` reaches the Panel even with debug off, so it carries only the
-     * package and the cause's key — never the licensing API's response body.
-     * Public for the same reason as `repairTranslationCache()`.
+     * `details` is not debug-gated, so it carries only the package and the
+     * cause's key, never the licensing API's response body.
      */
     public static function activationFailure(Throwable $e, string $packageName): InvalidArgumentException
     {
@@ -313,8 +310,6 @@ final class LicensePanel
 
     public static function translations(): array
     {
-        // Kirby ships Spanish only with a country code, so a bare `es` never
-        // matches the locale the Panel reports.
         $spanish = [
             'kirby-tools.license.status.active' => 'Con licencia',
             'kirby-tools.license.status.inactive' => 'Activar ahora',
