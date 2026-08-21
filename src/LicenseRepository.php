@@ -91,5 +91,6 @@ final class LicenseRepository
         Json::write($this->licenseFile, $licenses);
 
         $this->cache = $licenses;
+        $this->readError = null;
     }
 }
