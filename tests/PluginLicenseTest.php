@@ -7,6 +7,7 @@ use JohannSchopplich\Licensing\LicenseRepository;
 use JohannSchopplich\Licensing\PluginLicense;
 use Kirby\Cms\App;
 use Kirby\Plugin\Plugin;
+use Kirby\Toolkit\I18n;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -147,5 +148,18 @@ final class PluginLicenseTest extends TestCase
         $this->assertSame('upgradeable', $status['value']);
         $this->assertSame('refresh', $status['icon']);
         $this->assertSame('notice', $status['theme']);
+    }
+
+    #[Test]
+    public function translates_the_status_label_into_the_locale_I18n_cached_without_plugin_keys(): void
+    {
+        I18n::$locale = fn (): string => 'de';
+        // `I18n::translation()` counts only a non-empty entry as a cache hit, so
+        // the frozen locale keeps a core key.
+        I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];
+
+        $status = $this->createLicense()->status()->toArray();
+
+        $this->assertSame('Jetzt aktivieren', $status['label']);
     }
 }
