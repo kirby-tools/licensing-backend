@@ -311,6 +311,7 @@ final class LicensePanel
 
     public static function translations(): array
     {
+        // Kirby ships no bare `es` translation.
         $spanish = [
             'kirby-tools.license.status.active' => 'Con licencia',
             'kirby-tools.license.status.inactive' => 'Activar ahora',

@@ -126,7 +126,7 @@ final class LicensesTest extends LicenseTestCase
             'test/package' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
                 'licenseCompatibility' => '^1.0.0',
-                'pluginVersion' => null, // Use null to prevent refresh.
+                'pluginVersion' => null, // Null prevents the refresh.
                 'createdAt' => '2024-01-01T00:00:00Z'
             ]
         ]));

@@ -89,7 +89,7 @@ final class LicensePanelTest extends LicenseTestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        // Kirby runs these handlers under its own scope, not the handler's own class.
+        // Kirby binds these handlers to the matched route or to `Api`, never to `LicensePanel`.
         $handler->call($scope());
     }
 
@@ -106,7 +106,6 @@ final class LicensePanelTest extends LicenseTestCase
 
         $load = LicensePanel::dialogs(self::PACKAGE_NAME, 'Test Plugin')[$dialogId]['load'];
 
-        // Kirby runs dialog handlers bound to the matched route, not to `LicensePanel`.
         $dialog = $load->call(new Route('', 'GET', $load));
 
         $this->assertSame($expected, $dialog['props']['fields'][$field][$property]);
