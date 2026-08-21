@@ -226,10 +226,7 @@ final class LicensePanel
     {
         self::repairTranslationCache();
 
-        $key = 'kirby-tools.license.status.' . $status->value;
-        $label = I18n::translate($key);
-
-        return is_string($label) ? $label : (self::translations()['en'][$key] ?? $status->value);
+        return self::resolveTranslation('kirby-tools.license.status.' . $status->value, $status->value);
     }
 
     /**
@@ -247,7 +244,7 @@ final class LicensePanel
         // `previous`, so the text goes in as an untranslated fallback instead.
         // TODO: Drop K4 compat in v1 – use named arguments once Kirby 5 is the floor.
         return new InvalidArgumentException([
-            'fallback' => $translationKey ? I18n::translate($translationKey) : $message,
+            'fallback' => $translationKey !== null ? self::resolveTranslation($translationKey, $message) : $message,
             'details' => [
                 'package' => $packageName,
                 'cause' => $e->getCode() ?: $e::class
@@ -255,22 +252,6 @@ final class LicensePanel
             'previous' => $e,
             'translate' => false
         ]);
-    }
-
-    /**
-     * Wraps a Panel handler so the translation cache is repaired before it runs.
-     *
-     * Kirby invokes handlers through `Closure::call()`, which rebinds their scope;
-     * the wrapper hands that same scope on, so the handler runs as it would
-     * without it.
-     */
-    private static function repairingTranslationCache(Closure $handler): Closure
-    {
-        return function (...$arguments) use ($handler) {
-            LicensePanel::repairTranslationCache();
-
-            return $handler->call($this, ...$arguments);
-        };
     }
 
     /**
@@ -534,5 +515,34 @@ final class LicensePanel
             'es_ES' => $spanish,
             'es_419' => $spanish
         ];
+    }
+
+    /**
+     * Wraps a Panel handler so the translation cache is repaired before it runs.
+     *
+     * Kirby invokes handlers through `Closure::call()`, which rebinds their scope;
+     * the wrapper hands that same scope on, so the handler runs as it would
+     * without it.
+     */
+    private static function repairingTranslationCache(Closure $handler): Closure
+    {
+        return function (...$arguments) use ($handler) {
+            LicensePanel::repairTranslationCache();
+
+            return $handler->call($this, ...$arguments);
+        };
+    }
+
+    /**
+     * Resolves a plugin string, with the bundled English table as the last resort.
+     *
+     * `I18n::translate()` answers `null` for a key the current locale never
+     * loaded, which Kirby turns into its own placeholder message.
+     */
+    private static function resolveTranslation(string $key, string $fallback): string
+    {
+        $label = I18n::translate($key);
+
+        return is_string($label) ? $label : (self::translations()['en'][$key] ?? $fallback);
     }
 }

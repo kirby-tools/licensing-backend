@@ -201,6 +201,28 @@ final class LicensePanelTest extends LicenseTestCase
 
     #[Test]
     #[DataProvider('activationHandlers')]
+    public function activation_handler_falls_back_to_english_when_the_locale_has_no_plugin_translations(
+        Closure $handler,
+        Closure $scope
+    ): void {
+        $licenseKey = 'KT1-ABC123-DEF456';
+
+        // No `translations` prop, so the key resolves to null and Kirby would
+        // otherwise substitute its own `error.invalidArgument` placeholder.
+        $this->appWithLicenseRoots([
+            'request' => [
+                'query' => ['email' => 'test@example.com', 'licenseKey' => $licenseKey]
+            ]
+        ]);
+
+        $this->registerActivatedPlugin($licenseKey);
+
+        $this->expectExceptionMessage('License already activated');
+        $handler->call($scope());
+    }
+
+    #[Test]
+    #[DataProvider('activationHandlers')]
     public function activation_handler_keeps_the_cause_when_it_translates_a_failure(
         Closure $handler,
         Closure $scope
