@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace JohannSchopplich\Licensing;
 
+use Closure;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Toolkit\I18n;
@@ -36,6 +37,8 @@ final class LicensePanel
 
     private static App|null $checkedApp = null;
 
+    private static array $checkedLocales = [];
+
     public static function api(string $packageName): array
     {
         $apiPrefix = LicenseUtils::toApiPrefix($packageName);
@@ -44,9 +47,7 @@ final class LicensePanel
             [
                 'pattern' => "{$apiPrefix}/activate",
                 'method' => 'POST',
-                'action' => function () use ($packageName) {
-                    LicensePanel::repairTranslationCache();
-
+                'action' => self::repairingTranslationCache(function () use ($packageName) {
                     try {
                         $licenses = Licenses::read($packageName);
                         return $licenses->activateFromRequest();
@@ -58,7 +59,7 @@ final class LicensePanel
                             $translationKey ? I18n::translate($translationKey) : $message
                         );
                     }
-                }
+                })
             ]
         ];
     }
@@ -68,12 +69,10 @@ final class LicensePanel
         $dialogPrefix = LicenseUtils::toPackageSlug($packageName);
         $pluginId = LicenseUtils::toPluginId($packageName);
 
-        return [
+        $dialogs = [
             // Reached from `PluginLicense::toKirbyStatus` for active, upgradeable and incompatible licenses.
             "{$dialogPrefix}/license" => [
                 'load' => function () use ($packageName, $pluginId, $pluginLabel) {
-                    LicensePanel::repairTranslationCache();
-
                     $licenses = Licenses::read($packageName);
                     $license = $licenses->getLicense();
                     $status = $licenses->getStatusEnum();
@@ -167,8 +166,6 @@ final class LicensePanel
             // Reached from `PluginLicense::toKirbyStatus` for inactive and invalid licenses.
             "{$dialogPrefix}/activate" => [
                 'load' => function () {
-                    LicensePanel::repairTranslationCache();
-
                     return [
                         'component' => 'k-form-dialog',
                         'props' => [
@@ -198,8 +195,6 @@ final class LicensePanel
                     ];
                 },
                 'submit' => function () use ($packageName) {
-                    LicensePanel::repairTranslationCache();
-
                     try {
                         $licenses = Licenses::read($packageName);
                         $licenses->activateFromRequest();
@@ -218,6 +213,13 @@ final class LicensePanel
                 }
             ]
         ];
+
+        // Mapping over the handlers here means a dialog added later cannot
+        // forget the repair.
+        return array_map(
+            fn (array $dialog): array => array_map(self::repairingTranslationCache(...), $dialog),
+            $dialogs
+        );
     }
 
     public static function statusLabel(LicenseStatus $status): string
@@ -231,27 +233,54 @@ final class LicensePanel
     }
 
     /**
+     * Wraps a Panel handler so the translation cache is repaired before it runs.
+     *
+     * Kirby invokes handlers through `Closure::call()`, which rebinds their scope;
+     * the wrapper hands that same scope on, so the handler runs as it would
+     * without it.
+     */
+    private static function repairingTranslationCache(Closure $handler): Closure
+    {
+        return function (...$arguments) use ($handler) {
+            LicensePanel::repairTranslationCache();
+
+            return $handler->call($this, ...$arguments);
+        };
+    }
+
+    /**
      * Drops the translation cache when Kirby filled it before the plugins
-     * registered their strings. Public because Kirby rebinds the calling
-     * handlers to its own scopes, where `self::` no longer means this class.
+     * registered their strings. Public because the wrapper above runs under
+     * Kirby's scope, where `self::` no longer means this class.
      */
     public static function repairTranslationCache(): void
     {
         $kirby = App::instance(null, true);
 
-        if ($kirby === null || self::$checkedApp === $kirby) {
+        if ($kirby === null) {
             return;
         }
 
-        self::$checkedApp = $kirby;
+        if (self::$checkedApp !== $kirby) {
+            self::$checkedApp = $kirby;
+            self::$checkedLocales = [];
+        }
+
+        $locale = I18n::locale();
+
+        if (isset(self::$checkedLocales[$locale]) === true) {
+            return;
+        }
+
+        self::$checkedLocales[$locale] = true;
 
         $key = 'kirby-tools.license.status.' . LicenseStatus::Active->value;
 
         // A stale cache is invisible to `I18n::translate()`, which falls through
         // to the fallback locales; `en` terminates that chain, so it is probed too.
-        if (isset(I18n::translation(I18n::locale())[$key]) === false ||
+        if (isset(I18n::translation($locale)[$key]) === false ||
             isset(I18n::translation('en')[$key]) === false) {
-            I18n::$translations = [];
+            unset(I18n::$translations[$locale], I18n::$translations['en']);
         }
     }
 

@@ -154,4 +154,34 @@ final class LicensePanelTest extends TestCase
 
         $this->assertSame('Email', $dialog['props']['fields']['email']['label']);
     }
+
+    #[Test]
+    public function repair_translation_cache_keeps_locales_it_did_not_probe(): void
+    {
+        I18n::$locale = fn (): string => 'de';
+        I18n::$translations = [
+            'de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden'],
+            'fr' => ['some.other.plugin.key' => 'Registered at boot']
+        ];
+
+        LicensePanel::repairTranslationCache();
+
+        $this->assertSame('Registered at boot', I18n::$translations['fr']['some.other.plugin.key']);
+    }
+
+    #[Test]
+    public function repair_translation_cache_probes_every_locale_it_is_called_for(): void
+    {
+        I18n::$locale = fn (): string => 'de';
+        I18n::$translations = [
+            'de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden'],
+            'fr' => ['error.page.undefined' => 'La page est introuvable']
+        ];
+
+        LicensePanel::repairTranslationCache();
+
+        I18n::$locale = fn (): string => 'fr';
+
+        $this->assertSame('Sous licence', LicensePanel::statusLabel(LicenseStatus::Active));
+    }
 }
