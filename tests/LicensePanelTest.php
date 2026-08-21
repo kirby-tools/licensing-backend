@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\LicensePanel;
 use JohannSchopplich\Licensing\LicenseRepository;
+use JohannSchopplich\Licensing\LicenseStatus;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Http\Route;
@@ -124,5 +125,13 @@ final class LicensePanelTest extends TestCase
 
         $this->expectExceptionMessage('Lizenz bereits aktiviert');
         $submit->call(new Route('', 'POST', $submit));
+    }
+
+    #[Test]
+    public function status_label_translates_into_a_panel_locale_with_a_country_code(): void
+    {
+        I18n::$locale = fn (): string => 'es_ES';
+
+        $this->assertSame('Activar ahora', LicensePanel::statusLabel(LicenseStatus::Inactive));
     }
 }

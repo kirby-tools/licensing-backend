@@ -383,6 +383,36 @@ final class LicensePanel
                 'kirby-tools.license.error.incompatible' => 'Licencia no válida para esta versión del plugin',
                 'kirby-tools.license.error.upgradeable' => 'Licencia no válida para esta versión del plugin. Por favor, actualiza tu licencia.'
             ],
+            'es_ES' => [
+                'kirby-tools.license.status.active' => 'Con licencia',
+                'kirby-tools.license.status.inactive' => 'Activar ahora',
+                'kirby-tools.license.status.invalid' => 'Licencia inválida',
+                'kirby-tools.license.status.incompatible' => 'Versión de licencia incompatible',
+                'kirby-tools.license.status.upgradeable' => 'Actualización de licencia disponible',
+
+                'kirby-tools.license.activate.info' => 'Introduce los datos de tu licencia para activar el plugin.',
+                'kirby-tools.license.activate.email' => 'Correo electrónico',
+                'kirby-tools.license.activate.licenseKey' => 'Clave de licencia',
+                'kirby-tools.license.activate.licenseKey.help' => 'Encuentra tu clave de licencia en el correo de confirmación de pedido o en <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
+                'kirby-tools.license.activate.submit' => 'Activar licencia',
+
+                'kirby-tools.license.info.key' => 'Clave de licencia',
+                'kirby-tools.license.info.version' => 'Versión',
+                'kirby-tools.license.info.licenseCompatibility' => 'La licencia cubre {versions}',
+                'kirby-tools.license.info.status' => 'Estado',
+                'kirby-tools.license.info.status.active' => 'Activa',
+                'kirby-tools.license.info.status.upgradeable' => 'Actualización disponible',
+                'kirby-tools.license.info.status.incompatible' => 'No compatible con la versión instalada',
+                'kirby-tools.license.info.notFound' => 'No se encontró ninguna licencia.',
+                'kirby-tools.license.info.upgrade' => 'Actualizar licencia',
+                'kirby-tools.license.info.hub' => 'Gestionar licencias',
+
+                'kirby-tools.license.error.invalidCredentials' => 'Correo electrónico o clave de licencia incorrecta',
+                'kirby-tools.license.error.alreadyActivated' => 'Licencia ya activada',
+                'kirby-tools.license.error.invalid' => 'Licencia no válida para este plugin',
+                'kirby-tools.license.error.incompatible' => 'Licencia no válida para esta versión del plugin',
+                'kirby-tools.license.error.upgradeable' => 'Licencia no válida para esta versión del plugin. Por favor, actualiza tu licencia.'
+            ],
             'it' => [
                 'kirby-tools.license.status.active' => 'Con licenza',
                 'kirby-tools.license.status.inactive' => 'Attiva ora',
