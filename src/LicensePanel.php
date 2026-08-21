@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace JohannSchopplich\Licensing;
 
+use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Toolkit\I18n;
 use Throwable;
@@ -33,6 +34,8 @@ final class LicensePanel
         'License key not valid for this plugin version, please upgrade your license' => 'kirby-tools.license.error.upgradeable'
     ];
 
+    private static App|null $repairedApp = null;
+
     public static function api(string $packageName): array
     {
         $apiPrefix = LicenseUtils::toApiPrefix($packageName);
@@ -42,6 +45,8 @@ final class LicensePanel
                 'pattern' => "{$apiPrefix}/activate",
                 'method' => 'POST',
                 'action' => function () use ($packageName) {
+                    LicensePanel::repairTranslationCache();
+
                     try {
                         $licenses = Licenses::read($packageName);
                         return $licenses->activateFromRequest();
@@ -67,6 +72,8 @@ final class LicensePanel
             // Reached from `PluginLicense::toKirbyStatus` for active, upgradeable and incompatible licenses.
             "{$dialogPrefix}/license" => [
                 'load' => function () use ($packageName, $pluginId, $pluginLabel) {
+                    LicensePanel::repairTranslationCache();
+
                     $licenses = Licenses::read($packageName);
                     $license = $licenses->getLicense();
                     $status = $licenses->getStatusEnum();
@@ -160,6 +167,8 @@ final class LicensePanel
             // Reached from `PluginLicense::toKirbyStatus` for inactive and invalid licenses.
             "{$dialogPrefix}/activate" => [
                 'load' => function () {
+                    LicensePanel::repairTranslationCache();
+
                     return [
                         'component' => 'k-form-dialog',
                         'props' => [
@@ -189,6 +198,8 @@ final class LicensePanel
                     ];
                 },
                 'submit' => function () use ($packageName) {
+                    LicensePanel::repairTranslationCache();
+
                     try {
                         $licenses = Licenses::read($packageName);
                         $licenses->activateFromRequest();
@@ -209,24 +220,14 @@ final class LicensePanel
         ];
     }
 
-    /**
-     * Translates the status label, dropping the translation cache when a lookup
-     * during plugin loading froze it before any plugin registered its strings.
-     */
     public static function statusLabel(LicenseStatus $status): string
     {
+        self::repairTranslationCache();
+
         $key = 'kirby-tools.license.status.' . $status->value;
-        $locale = I18n::locale();
-
-        // `I18n::translate()` falls through to the fallback locales, so a frozen
-        // locale yields another language's string instead of `null`.
-        if (isset(I18n::translation($locale)[$key]) === false) {
-            I18n::$translations = [];
-        }
-
         $label = I18n::translate($key);
 
-        return is_string($label) ? $label : self::translations()['en'][$key];
+        return is_string($label) ? $label : (self::translations()['en'][$key] ?? $status->value);
     }
 
     public static function translations(): array
@@ -413,5 +414,29 @@ final class LicensePanel
                 'kirby-tools.license.error.upgradeable' => 'Licenza non valida per questa versione del plugin. Aggiorna la tua licenza.'
             ]
         ];
+    }
+
+    /**
+     * Reloads the translations Kirby cached during plugin loading, before any
+     * plugin had registered its own strings.
+     *
+     * Public because the Panel handlers that call it run rebound to Kirby's own
+     * route and API scopes.
+     */
+    public static function repairTranslationCache(): void
+    {
+        $kirby = App::instance(null, true);
+
+        if ($kirby === null || self::$repairedApp === $kirby) {
+            return;
+        }
+
+        self::$repairedApp = $kirby;
+
+        // `I18n::translate()` falls through to the fallback locales, so a stale
+        // cache yields another language's string instead of `null`.
+        if (isset(I18n::translation(I18n::locale())['kirby-tools.license.status.active']) === false) {
+            I18n::$translations = [];
+        }
     }
 }
