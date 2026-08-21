@@ -85,7 +85,7 @@ final class LicensePanelTest extends LicenseTestCase
 
     #[Test]
     #[DataProvider('activationHandlers')]
-    public function activation_handler_throws_when_bound_to_kirbys_own_scope(Closure $handler, Closure $scope): void
+    public function activation_handler_throws_an_invalid_argument_exception_when_kirby_rebinds_the_scope(Closure $handler, Closure $scope): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -113,7 +113,7 @@ final class LicensePanelTest extends LicenseTestCase
 
     #[Test]
     #[DataProvider('activationHandlers')]
-    public function activation_handler_reports_a_failure_when_the_translation_cache_lost_the_plugin_keys(
+    public function activation_handler_translates_the_failure_when_the_translation_cache_lost_the_plugin_keys(
         Closure $handler,
         Closure $scope
     ): void {
@@ -188,7 +188,7 @@ final class LicensePanelTest extends LicenseTestCase
     }
 
     #[Test]
-    public function activate_dialog_says_so_when_the_license_file_cannot_be_read(): void
+    public function activate_dialog_warns_when_the_license_file_cannot_be_read(): void
     {
         file_put_contents(self::LICENSE_FILE_PATH, '{ this is not json');
 

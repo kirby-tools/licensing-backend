@@ -155,7 +155,7 @@ final class LicensesTest extends LicenseTestCase
     }
 
     #[Test]
-    public function reports_no_read_error_when_the_license_file_does_not_exist(): void
+    public function reports_no_read_error_when_no_license_file_exists(): void
     {
         $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
 
