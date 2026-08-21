@@ -6,27 +6,10 @@ use JohannSchopplich\Licensing\LicenseValidator;
 use Kirby\Cms\App;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
 #[CoversClass(LicenseValidator::class)]
-final class LicenseValidatorTest extends TestCase
+final class LicenseValidatorTest extends LicenseTestCase
 {
-    private App $app;
-
-    protected function setUp(): void
-    {
-        $this->app = new App([
-            'roots' => [
-                'index' => __DIR__
-            ]
-        ]);
-    }
-
-    protected function tearDown(): void
-    {
-        App::destroy();
-    }
-
     #[Test]
     public function accepts_keys_matching_the_kt_format(): void
     {

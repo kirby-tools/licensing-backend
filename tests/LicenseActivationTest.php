@@ -13,35 +13,18 @@ use Kirby\Http\Request;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
 
 #[CoversClass(LicenseActivator::class)]
-final class LicenseActivationTest extends TestCase
+final class LicenseActivationTest extends LicenseTestCase
 {
-    private const LICENSE_FILE = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
-
     private App $app;
     private HttpClientInterface&MockObject $mockHttpClient;
 
     protected function setUp(): void
     {
-        $this->app = new App([
-            'roots' => [
-                'index' => __DIR__,
-                'license' => __DIR__ . '/.license'
-            ]
-        ]);
+        $this->app = $this->appWithLicenseRoots();
 
         $this->mockHttpClient = $this->createMock(HttpClientInterface::class);
-    }
-
-    protected function tearDown(): void
-    {
-        if (file_exists(self::LICENSE_FILE)) {
-            unlink(self::LICENSE_FILE);
-        }
-
-        App::destroy();
     }
 
     #[Test]
@@ -205,9 +188,9 @@ final class LicenseActivationTest extends TestCase
 
         $activator->activate('test@example.com', '123456');
 
-        $this->assertFileExists(self::LICENSE_FILE);
+        $this->assertFileExists(self::LICENSE_FILE_PATH);
 
-        $savedData = json_decode(file_get_contents(self::LICENSE_FILE), true);
+        $savedData = json_decode(file_get_contents(self::LICENSE_FILE_PATH), true);
         $this->assertArrayHasKey('simple/package', $savedData);
         $this->assertEquals('KT1-ABC123-DEF456', $savedData['simple/package']['licenseKey']);
         $this->assertEquals('^1.0.0', $savedData['simple/package']['licenseCompatibility']);
@@ -304,7 +287,7 @@ final class LicenseActivationTest extends TestCase
             version: '1.0.0'
         );
 
-        file_put_contents(self::LICENSE_FILE, json_encode([
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
                 'licenseKey' => 'KT1-ABC123-DEF456',
                 'licenseCompatibility' => '^1.0.0',

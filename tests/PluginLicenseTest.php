@@ -3,44 +3,26 @@
 declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\LicensePanel;
-use JohannSchopplich\Licensing\LicenseRepository;
 use JohannSchopplich\Licensing\PluginLicense;
 use Kirby\Cms\App;
 use Kirby\Plugin\Plugin;
 use Kirby\Toolkit\I18n;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
 #[CoversClass(PluginLicense::class)]
-final class PluginLicenseTest extends TestCase
+final class PluginLicenseTest extends LicenseTestCase
 {
     private const PACKAGE_NAME = 'test/kirby-package';
-    private const LICENSE_FILE_PATH = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
 
     private Plugin $plugin;
 
     protected function setUp(): void
     {
-        new App([
-            'roots' => [
-                'index' => __DIR__,
-                'license' => __DIR__ . '/.license'
-            ],
-            'translations' => LicensePanel::translations()
-        ]);
+        $this->appWithLicenseRoots(['translations' => LicensePanel::translations()]);
 
         $this->plugin = $this->createMock(Plugin::class);
         $this->plugin->method('version')->willReturn('1.0.0');
-    }
-
-    protected function tearDown(): void
-    {
-        if (file_exists(self::LICENSE_FILE_PATH)) {
-            unlink(self::LICENSE_FILE_PATH);
-        }
-
-        App::destroy();
     }
 
     private function createLicense(): PluginLicense
@@ -151,7 +133,7 @@ final class PluginLicenseTest extends TestCase
     }
 
     #[Test]
-    public function translates_the_status_label_into_the_locale_I18n_cached_without_plugin_keys(): void
+    public function translates_the_status_label_when_the_translation_cache_lost_the_plugin_keys(): void
     {
         I18n::$locale = fn (): string => 'de';
         I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];

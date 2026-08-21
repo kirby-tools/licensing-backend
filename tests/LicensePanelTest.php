@@ -3,8 +3,8 @@
 declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\LicensePanel;
-use JohannSchopplich\Licensing\LicenseRepository;
 use JohannSchopplich\Licensing\LicenseStatus;
+use Kirby\Cms\Api;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Http\Route;
@@ -12,53 +12,42 @@ use Kirby\Toolkit\I18n;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
 #[CoversClass(LicensePanel::class)]
-final class LicensePanelTest extends TestCase
+final class LicensePanelTest extends LicenseTestCase
 {
-    private const LICENSE_FILE = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
-
-    private App $app;
+    private const PACKAGE_NAME = 'johannschopplich/test-plugin';
 
     protected function setUp(): void
     {
-        $this->app = $this->bootApp();
+        $this->appWithTranslations(LicensePanel::translations());
     }
 
-    protected function tearDown(): void
+    private function appWithTranslations(array $translations): App
     {
-        if (file_exists(self::LICENSE_FILE)) {
-            unlink(self::LICENSE_FILE);
-        }
-
-        App::destroy();
+        return $this->appWithLicenseRoots(['translations' => $translations]);
     }
 
-    private function bootApp(array $props = []): App
+    private function appWithActivationRequest(string $licenseKey): App
     {
-        return $this->app = new App([
-            'roots' => [
-                'index' => __DIR__,
-                'license' => __DIR__ . '/.license'
-            ],
+        return $this->appWithLicenseRoots([
             'translations' => LicensePanel::translations(),
-            ...$props
+            'request' => [
+                'query' => ['email' => 'test@example.com', 'licenseKey' => $licenseKey]
+            ]
         ]);
     }
 
     public static function activationHandlers(): array
     {
-        $packageName = 'johannschopplich/test-plugin';
-
         return [
             'api route action' => [
-                LicensePanel::api($packageName)[0]['action'],
-                fn (App $app): object => $app->api()
+                LicensePanel::api(self::PACKAGE_NAME)[0]['action'],
+                fn (): Api => App::instance()->api()
             ],
             'dialog submit handler' => [
-                array_column(LicensePanel::dialogs($packageName, 'Test Plugin'), 'submit')[0],
-                fn (App $app): object => new Route('', 'POST', fn () => null)
+                array_column(LicensePanel::dialogs(self::PACKAGE_NAME, 'Test Plugin'), 'submit')[0],
+                fn (): Route => new Route('', 'POST', fn () => null)
             ]
         ];
     }
@@ -71,6 +60,15 @@ final class LicensePanelTest extends TestCase
         ];
     }
 
+    public static function panelLocalesWithCountryCode(): array
+    {
+        return [
+            'european spanish' => ['es_ES', 'Activar ahora'],
+            'latin american spanish' => ['es_419', 'Activar ahora'],
+            'european portuguese' => ['pt_PT', 'Ativar agora']
+        ];
+    }
+
     #[Test]
     #[DataProvider('activationHandlers')]
     public function activation_handler_throws_when_bound_to_kirbys_own_scope(Closure $handler, Closure $scope): void
@@ -78,12 +76,12 @@ final class LicensePanelTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         // Kirby runs these handlers under its own scope, not the handler's own class.
-        $handler->call($scope($this->app));
+        $handler->call($scope());
     }
 
     #[Test]
     #[DataProvider('dialogFields')]
-    public function dialogs_label_their_fields_in_the_locale_I18n_cached_without_plugin_keys(
+    public function dialogs_label_their_fields_when_the_translation_cache_lost_the_plugin_keys(
         string $dialogId,
         string $field,
         string $property,
@@ -92,7 +90,7 @@ final class LicensePanelTest extends TestCase
         I18n::$locale = fn (): string => 'de';
         I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];
 
-        $load = LicensePanel::dialogs('johannschopplich/test-plugin', 'Test Plugin')[$dialogId]['load'];
+        $load = LicensePanel::dialogs(self::PACKAGE_NAME, 'Test Plugin')[$dialogId]['load'];
 
         // Kirby runs dialog handlers bound to the matched route, not to `LicensePanel`.
         $dialog = $load->call(new Route('', 'GET', $load));
@@ -102,22 +100,17 @@ final class LicensePanelTest extends TestCase
 
     #[Test]
     #[DataProvider('activationHandlers')]
-    public function activation_handler_reports_a_failure_in_the_locale_I18n_cached_without_plugin_keys(
+    public function activation_handler_reports_a_failure_when_the_translation_cache_lost_the_plugin_keys(
         Closure $handler,
         Closure $scope
     ): void {
-        $packageName = 'johannschopplich/test-plugin';
         $licenseKey = 'KT1-ABC123-DEF456';
 
-        $this->bootApp([
-            'request' => [
-                'query' => ['email' => 'test@example.com', 'licenseKey' => $licenseKey]
-            ]
-        ]);
+        $this->appWithActivationRequest($licenseKey);
 
-        App::plugin(name: $packageName, extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
-        file_put_contents(self::LICENSE_FILE, json_encode([
-            $packageName => [
+        App::plugin(name: self::PACKAGE_NAME, extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
+            self::PACKAGE_NAME => [
                 'licenseKey' => $licenseKey,
                 'licenseCompatibility' => '^1.0.0',
                 'pluginVersion' => '1.0.0'
@@ -128,28 +121,31 @@ final class LicensePanelTest extends TestCase
         I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];
 
         $this->expectExceptionMessage('Lizenz bereits aktiviert');
-        $handler->call($scope($this->app));
+        $handler->call($scope());
     }
 
     #[Test]
-    public function status_label_translates_into_a_panel_locale_with_a_country_code(): void
-    {
-        I18n::$locale = fn (): string => 'es_ES';
+    #[DataProvider('panelLocalesWithCountryCode')]
+    public function status_label_translates_into_a_panel_locale_with_a_country_code(
+        string $locale,
+        string $expected
+    ): void {
+        I18n::$locale = fn (): string => $locale;
 
-        $this->assertSame('Activar ahora', LicensePanel::statusLabel(LicenseStatus::Inactive));
+        $this->assertSame($expected, LicensePanel::statusLabel(LicenseStatus::Inactive));
     }
 
     #[Test]
-    public function dialogs_label_their_fields_from_the_fallback_locale_I18n_cached_without_plugin_keys(): void
+    public function dialogs_label_their_fields_when_the_fallback_locale_lost_the_plugin_keys(): void
     {
         $translations = LicensePanel::translations();
         unset($translations['de']['kirby-tools.license.activate.email']);
-        $this->bootApp(['translations' => $translations]);
+        $this->appWithTranslations($translations);
 
         I18n::$locale = fn (): string => 'de';
         I18n::$translations = ['en' => ['error.page.undefined' => 'The page cannot be found']];
 
-        $load = LicensePanel::dialogs('johannschopplich/test-plugin', 'Test Plugin')['johannschopplich-test-plugin/activate']['load'];
+        $load = LicensePanel::dialogs(self::PACKAGE_NAME, 'Test Plugin')['johannschopplich-test-plugin/activate']['load'];
         $dialog = $load->call(new Route('', 'GET', $load));
 
         $this->assertSame('Email', $dialog['props']['fields']['email']['label']);

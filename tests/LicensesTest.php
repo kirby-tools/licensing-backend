@@ -3,29 +3,20 @@
 declare(strict_types = 1);
 
 use JohannSchopplich\Licensing\Http\HttpClientInterface;
-use JohannSchopplich\Licensing\LicenseRepository;
 use JohannSchopplich\Licensing\Licenses;
 use Kirby\Cms\App;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Licenses::class)]
-final class LicensesTest extends TestCase
+final class LicensesTest extends LicenseTestCase
 {
-    public const LICENSE_FILE_PATH = __DIR__ . '/' . LicenseRepository::LICENSE_FILE;
-
     private App $app;
     private HttpClientInterface $mockHttpClient;
 
     protected function setUp(): void
     {
-        $this->app = new App([
-            'roots' => [
-                'index' => __DIR__,
-                'license' => __DIR__ . '/.license'
-            ]
-        ]);
+        $this->app = $this->appWithLicenseRoots();
 
         $mockPlugin = $this->createMock(\Kirby\Plugin\Plugin::class);
         $mockPlugin->method('version')->willReturn('1.0.0');
@@ -37,15 +28,6 @@ final class LicensesTest extends TestCase
         ]);
 
         $this->mockHttpClient = $this->createMock(HttpClientInterface::class);
-    }
-
-    protected function tearDown(): void
-    {
-        if (file_exists(self::LICENSE_FILE_PATH)) {
-            unlink(self::LICENSE_FILE_PATH);
-        }
-
-        App::destroy();
     }
 
     #[Test]
