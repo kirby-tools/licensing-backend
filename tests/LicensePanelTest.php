@@ -53,10 +53,12 @@ final class LicensePanelTest extends TestCase
 
         return [
             'api route action' => [
-                LicensePanel::api($packageName)[0]['action']
+                LicensePanel::api($packageName)[0]['action'],
+                fn (App $app): object => $app->api()
             ],
             'dialog submit handler' => [
-                array_column(LicensePanel::dialogs($packageName, 'Test Plugin'), 'submit')[0]
+                array_column(LicensePanel::dialogs($packageName, 'Test Plugin'), 'submit')[0],
+                fn (App $app): object => new Route('', 'POST', fn () => null)
             ]
         ];
     }
@@ -71,12 +73,12 @@ final class LicensePanelTest extends TestCase
 
     #[Test]
     #[DataProvider('activationHandlers')]
-    public function activation_handler_throws_when_bound_to_the_kirby_api_scope(Closure $handler): void
+    public function activation_handler_throws_when_bound_to_kirbys_own_scope(Closure $handler, Closure $scope): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        // Kirby runs these handlers under its own `Api` scope, not the handler's own class.
-        $handler->call($this->app->api());
+        // Kirby runs these handlers under its own scope, not the handler's own class.
+        $handler->call($scope($this->app));
     }
 
     #[Test]
@@ -99,17 +101,15 @@ final class LicensePanelTest extends TestCase
     }
 
     #[Test]
-    public function activation_handler_reports_a_failure_in_the_locale_I18n_cached_without_plugin_keys(): void
-    {
+    #[DataProvider('activationHandlers')]
+    public function activation_handler_reports_a_failure_in_the_locale_I18n_cached_without_plugin_keys(
+        Closure $handler,
+        Closure $scope
+    ): void {
         $packageName = 'johannschopplich/test-plugin';
         $licenseKey = 'KT1-ABC123-DEF456';
 
-        $this->app = new App([
-            'roots' => [
-                'index' => __DIR__,
-                'license' => __DIR__ . '/.license'
-            ],
-            'translations' => LicensePanel::translations(),
+        $this->bootApp([
             'request' => [
                 'query' => ['email' => 'test@example.com', 'licenseKey' => $licenseKey]
             ]
@@ -127,10 +127,8 @@ final class LicensePanelTest extends TestCase
         I18n::$locale = fn (): string => 'de';
         I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];
 
-        $submit = array_column(LicensePanel::dialogs($packageName, 'Test Plugin'), 'submit')[0];
-
         $this->expectExceptionMessage('Lizenz bereits aktiviert');
-        $submit->call(new Route('', 'POST', $submit));
+        $handler->call($scope($this->app));
     }
 
     #[Test]
