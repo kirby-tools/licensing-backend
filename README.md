@@ -1,6 +1,6 @@
 # Kirby Tools Licensing Backend
 
-Backend licensing system for all commercial [Kirby Tools plugins](https://kirby.tools). This package handles license activation, status and storage on the server side, which enables:
+Backend licensing system for all commercial [Kirby Tools plugins](https://kirby.tools). This package handles license activation, status, and storage on the server side, which enables:
 
 - License status and enforcement
 - Seamless license activation from within Kirby
