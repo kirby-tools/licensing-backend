@@ -213,7 +213,7 @@ final class LicenseActivationTest extends LicenseTestCase
         ]);
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Missing license registration parameters "email" or "licenseKey"');
+        $this->expectExceptionMessage('Missing license activation parameters "email" or "licenseKey"');
 
         $activator->activateFromRequest($request);
     }
@@ -235,7 +235,7 @@ final class LicenseActivationTest extends LicenseTestCase
         ]);
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Missing license registration parameters "email" or "licenseKey"');
+        $this->expectExceptionMessage('Missing license activation parameters "email" or "licenseKey"');
 
         $activator->activateFromRequest($request);
     }

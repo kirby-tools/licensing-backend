@@ -45,7 +45,7 @@ final class PluginLicenseExtensionsTest extends TestCase
     public function format_compatibility_delegates_to_license_utils(): void
     {
         $this->assertEquals(
-            LicenseUtils::formatCompatibility('^1 || ^2'),
+            LicenseUtils::toCompatibleVersions('^1 || ^2'),
             PluginLicenseExtensions::formatCompatibility('^1 || ^2')
         );
     }

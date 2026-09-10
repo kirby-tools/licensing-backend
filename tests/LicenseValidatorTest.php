@@ -31,17 +31,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function extracts_the_generation_number_from_the_key(): void
-    {
-        $validator = new LicenseValidator('test/package');
-
-        $this->assertEquals(1, $validator->getLicenseGeneration('KT1-ABC123-DEF456'));
-        $this->assertEquals(999, $validator->getLicenseGeneration('KT999-ABC123-DEF456'));
-        $this->assertNull($validator->getLicenseGeneration('INVALID-KEY'));
-    }
-
-    #[Test]
-    public function treats_a_missing_compatibility_as_not_upgradeable(): void
+    public function treats_a_missing_constraint_as_not_upgradeable(): void
     {
         App::plugin(
             name: 'test/package',
@@ -66,7 +56,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function is_upgradeable_only_when_the_plugin_outgrew_the_compatibility_range(): void
+    public function is_upgradeable_only_when_the_plugin_outgrew_the_constraint(): void
     {
         App::plugin(
             name: 'test/package',

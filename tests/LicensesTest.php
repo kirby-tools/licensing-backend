@@ -120,7 +120,7 @@ final class LicensesTest extends LicenseTestCase
     }
 
     #[Test]
-    public function exposes_key_generation_and_compatibility_for_a_valid_license(): void
+    public function exposes_key_and_compatibility_constraint_for_a_valid_license(): void
     {
         file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             'test/package' => [
@@ -135,9 +135,7 @@ final class LicensesTest extends LicenseTestCase
         $license = $licenses->getLicense();
 
         $this->assertIsArray($license);
-        $this->assertArrayHasKey('key', $license);
-        $this->assertArrayHasKey('generation', $license);
-        $this->assertArrayHasKey('compatibility', $license);
+        $this->assertSame(['key', 'compatibilityConstraint'], array_keys($license));
     }
 
     #[Test]
