@@ -49,14 +49,14 @@ final class PluginLicenseTest extends LicenseTestCase
     }
 
     #[Test]
-    public function exposes_the_license_name_and_url(): void
+    public function license_name_and_license_url_point_at_the_kirby_tools_license(): void
     {
         $this->assertSame('Kirby Tools Plugin License', PluginLicense::LICENSE_NAME);
         $this->assertSame('https://kirby.tools/license', PluginLicense::LICENSE_URL);
     }
 
     #[Test]
-    public function shows_an_active_badge_for_a_valid_compatible_license(): void
+    public function status_shows_an_active_badge_for_a_valid_compatible_license(): void
     {
         $this->registerPlugin('1.0.0');
         $this->writeLicenseFile([
@@ -73,7 +73,7 @@ final class PluginLicenseTest extends LicenseTestCase
     }
 
     #[Test]
-    public function shows_a_missing_badge_without_a_stored_license(): void
+    public function status_shows_a_missing_badge_without_a_stored_license(): void
     {
         $status = $this->createLicense()->status()->toArray();
 
@@ -83,7 +83,7 @@ final class PluginLicenseTest extends LicenseTestCase
     }
 
     #[Test]
-    public function shows_an_invalid_badge_for_a_malformed_key(): void
+    public function status_shows_an_invalid_badge_for_a_malformed_key(): void
     {
         $this->writeLicenseFile([
             'licenseKey' => 'INVALID-KEY',
@@ -99,7 +99,7 @@ final class PluginLicenseTest extends LicenseTestCase
     }
 
     #[Test]
-    public function shows_an_incompatible_badge_when_the_license_does_not_cover_the_plugin_version(): void
+    public function status_shows_an_incompatible_badge_when_the_license_does_not_cover_the_plugin_version(): void
     {
         $this->registerPlugin('1.0.0');
         $this->writeLicenseFile([
@@ -116,7 +116,7 @@ final class PluginLicenseTest extends LicenseTestCase
     }
 
     #[Test]
-    public function shows_an_upgradeable_badge_when_the_plugin_outgrew_the_license(): void
+    public function status_shows_an_upgradeable_badge_when_the_plugin_outgrew_the_license(): void
     {
         $this->registerPlugin('2.0.0');
         $this->writeLicenseFile([
@@ -133,7 +133,7 @@ final class PluginLicenseTest extends LicenseTestCase
     }
 
     #[Test]
-    public function translates_the_status_label_when_the_translation_cache_lost_the_plugin_keys(): void
+    public function status_translates_its_label_when_the_translation_cache_lost_the_plugin_keys(): void
     {
         I18n::$locale = fn (): string => 'de';
         I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];

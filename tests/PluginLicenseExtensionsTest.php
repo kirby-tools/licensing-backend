@@ -60,7 +60,7 @@ final class PluginLicenseExtensionsTest extends TestCase
     }
 
     #[Test]
-    public function mirrors_the_activation_error_keys_of_license_panel(): void
+    public function activation_error_keys_mirror_license_panel(): void
     {
         $this->assertEquals(
             LicensePanel::ACTIVATION_ERROR_KEYS,

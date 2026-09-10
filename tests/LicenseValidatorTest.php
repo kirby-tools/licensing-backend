@@ -11,7 +11,7 @@ use PHPUnit\Framework\Attributes\Test;
 final class LicenseValidatorTest extends LicenseTestCase
 {
     #[Test]
-    public function accepts_keys_matching_the_kt_format(): void
+    public function is_valid_accepts_keys_in_the_kt_format(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -20,7 +20,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function rejects_malformed_empty_and_null_keys(): void
+    public function is_valid_rejects_malformed_empty_and_null_keys(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -31,7 +31,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function treats_a_missing_constraint_as_not_upgradeable(): void
+    public function is_upgradeable_returns_false_for_a_null_or_empty_constraint(): void
     {
         App::plugin(
             name: 'test/package',
@@ -47,7 +47,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function is_not_upgradeable_without_an_installed_plugin(): void
+    public function is_upgradeable_returns_false_without_an_installed_plugin(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -56,7 +56,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function is_upgradeable_only_when_the_plugin_outgrew_the_constraint(): void
+    public function is_upgradeable_returns_true_only_when_the_plugin_outgrew_the_constraint(): void
     {
         App::plugin(
             name: 'test/package',
@@ -72,7 +72,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function reads_the_licensed_major_from_tilde_and_exact_constraints(): void
+    public function is_upgradeable_reads_the_licensed_major_from_tilde_and_exact_constraints(): void
     {
         App::plugin(
             name: 'test/package',
@@ -90,7 +90,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function is_never_compatible_without_an_installed_plugin(): void
+    public function is_compatible_returns_false_without_an_installed_plugin(): void
     {
         $validator = new LicenseValidator('test/package');
 
@@ -100,7 +100,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function is_compatible_when_the_installed_version_falls_in_the_range(): void
+    public function is_compatible_returns_true_when_the_installed_version_satisfies_the_constraint(): void
     {
         App::plugin(
             name: 'test/package',
@@ -116,7 +116,7 @@ final class LicenseValidatorTest extends LicenseTestCase
     }
 
     #[Test]
-    public function is_never_compatible_with_an_unparsable_constraint(): void
+    public function is_compatible_returns_false_for_an_unparsable_constraint(): void
     {
         App::plugin(
             name: 'test/package',

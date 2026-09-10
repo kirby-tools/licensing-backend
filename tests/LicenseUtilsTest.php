@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 final class LicenseUtilsTest extends TestCase
 {
     #[Test]
-    public function derives_the_plugin_id_from_the_package_name(): void
+    public function to_plugin_id_strips_the_vendor_and_the_kirby_prefix(): void
     {
         $this->assertEquals('copilot', LicenseUtils::toPluginId('johannschopplich/kirby-copilot'));
         $this->assertEquals('content-translator', LicenseUtils::toPluginId('johannschopplich/kirby-content-translator'));
@@ -19,7 +19,7 @@ final class LicenseUtilsTest extends TestCase
     }
 
     #[Test]
-    public function derives_the_api_prefix_from_the_package_name(): void
+    public function to_api_prefix_wraps_the_plugin_id_in_double_underscores(): void
     {
         $this->assertEquals('__copilot__', LicenseUtils::toApiPrefix('johannschopplich/kirby-copilot'));
         $this->assertEquals('__content-translator__', LicenseUtils::toApiPrefix('johannschopplich/kirby-content-translator'));
@@ -27,13 +27,13 @@ final class LicenseUtilsTest extends TestCase
     }
 
     #[Test]
-    public function slugifies_the_package_name(): void
+    public function to_package_slug_replaces_the_slash_with_a_hyphen(): void
     {
         $this->assertEquals('johannschopplich-kirby-copilot', LicenseUtils::toPackageSlug('johannschopplich/kirby-copilot'));
     }
 
     #[Test]
-    public function converts_a_constraint_set_to_compatible_versions(): void
+    public function to_compatible_versions_spans_the_lowest_to_the_highest_major(): void
     {
         $this->assertEquals('v1', LicenseUtils::toCompatibleVersions('^1'));
 

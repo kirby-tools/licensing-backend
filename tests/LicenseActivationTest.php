@@ -28,7 +28,7 @@ final class LicenseActivationTest extends LicenseTestCase
     }
 
     #[Test]
-    public function marks_the_license_active_when_the_api_confirms_the_key(): void
+    public function activate_marks_the_license_active_when_the_api_confirms_the_key(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -62,7 +62,7 @@ final class LicenseActivationTest extends LicenseTestCase
     }
 
     #[Test]
-    public function throws_when_the_key_belongs_to_another_package(): void
+    public function activate_throws_when_the_key_belongs_to_another_package(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -96,7 +96,7 @@ final class LicenseActivationTest extends LicenseTestCase
     }
 
     #[Test]
-    public function throws_naming_the_upgrade_when_the_plugin_outgrew_the_license(): void
+    public function activate_throws_naming_the_upgrade_when_the_plugin_outgrew_the_license(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -130,7 +130,7 @@ final class LicenseActivationTest extends LicenseTestCase
     }
 
     #[Test]
-    public function throws_when_the_api_response_omits_the_package_name(): void
+    public function activate_throws_when_the_api_response_omits_the_package_name(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -159,7 +159,7 @@ final class LicenseActivationTest extends LicenseTestCase
     }
 
     #[Test]
-    public function persists_key_and_compatibility_to_the_license_file(): void
+    public function activate_writes_license_key_and_license_compatibility_to_the_license_file(): void
     {
         App::plugin(
             name: 'simple/package',
@@ -197,7 +197,7 @@ final class LicenseActivationTest extends LicenseTestCase
     }
 
     #[Test]
-    public function throws_when_the_request_lacks_an_email(): void
+    public function activate_from_request_throws_when_the_request_lacks_an_email(): void
     {
         $repository = new LicenseRepository();
         $validator = new LicenseValidator('test/package');
@@ -219,7 +219,7 @@ final class LicenseActivationTest extends LicenseTestCase
     }
 
     #[Test]
-    public function throws_when_the_request_lacks_a_license_key(): void
+    public function activate_from_request_throws_when_the_request_lacks_a_license_key(): void
     {
         $repository = new LicenseRepository();
         $validator = new LicenseValidator('test/package');
@@ -241,7 +241,7 @@ final class LicenseActivationTest extends LicenseTestCase
     }
 
     #[Test]
-    public function falls_back_to_the_order_id_an_older_plugin_sends(): void
+    public function activate_from_request_falls_back_to_the_order_id_an_older_plugin_sends(): void
     {
         App::plugin(
             name: 'test/package',
@@ -278,7 +278,7 @@ final class LicenseActivationTest extends LicenseTestCase
     }
 
     #[Test]
-    public function throws_when_the_license_is_already_activated(): void
+    public function activate_throws_when_the_license_is_already_activated(): void
     {
         App::plugin(
             name: 'test/package',
