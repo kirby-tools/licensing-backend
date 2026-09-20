@@ -12,19 +12,19 @@ use Kirby\Exception\LogicException;
 use Kirby\Http\Request;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 
 #[CoversClass(LicenseActivator::class)]
 final class LicenseActivationTest extends LicenseTestCase
 {
     private App $app;
-    private HttpClientInterface&MockObject $mockHttpClient;
+    private HttpClientInterface&Stub $httpClient;
 
     protected function setUp(): void
     {
         $this->app = $this->appWithLicenseRoots();
 
-        $this->mockHttpClient = $this->createMock(HttpClientInterface::class);
+        $this->httpClient = $this->createStub(HttpClientInterface::class);
     }
 
     #[Test]
@@ -37,7 +37,7 @@ final class LicenseActivationTest extends LicenseTestCase
             version: '1.0.0'
         );
 
-        $this->mockHttpClient->method('request')->willReturn([
+        $this->httpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
             'licenseCompatibility' => '^1.0.0',
@@ -52,7 +52,7 @@ final class LicenseActivationTest extends LicenseTestCase
             'simple/package',
             $repository,
             $validator,
-            $this->mockHttpClient
+            $this->httpClient
         );
 
         $activator->activate('test@example.com', '123456');
@@ -71,7 +71,7 @@ final class LicenseActivationTest extends LicenseTestCase
             version: '1.0.0'
         );
 
-        $this->mockHttpClient->method('request')->willReturn([
+        $this->httpClient->method('request')->willReturn([
             'packageName' => 'wrong/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
             'licenseCompatibility' => '^1.0.0',
@@ -86,7 +86,7 @@ final class LicenseActivationTest extends LicenseTestCase
             'simple/package',
             $repository,
             $validator,
-            $this->mockHttpClient
+            $this->httpClient
         );
 
         $this->expectException(LogicException::class);
@@ -105,7 +105,7 @@ final class LicenseActivationTest extends LicenseTestCase
             version: '2.0.0'
         );
 
-        $this->mockHttpClient->method('request')->willReturn([
+        $this->httpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
             'licenseCompatibility' => '^1.0.0', // Only supports 1.x.
@@ -120,7 +120,7 @@ final class LicenseActivationTest extends LicenseTestCase
             'simple/package',
             $repository,
             $validator,
-            $this->mockHttpClient
+            $this->httpClient
         );
 
         $this->expectException(LogicException::class);
@@ -139,7 +139,7 @@ final class LicenseActivationTest extends LicenseTestCase
             version: '1.0.0'
         );
 
-        $this->mockHttpClient->method('request')->willReturn([
+        $this->httpClient->method('request')->willReturn([
             'error' => 'License not found'
         ]);
 
@@ -149,7 +149,7 @@ final class LicenseActivationTest extends LicenseTestCase
             'simple/package',
             $repository,
             $validator,
-            $this->mockHttpClient
+            $this->httpClient
         );
 
         $this->expectException(LogicException::class);
@@ -168,7 +168,7 @@ final class LicenseActivationTest extends LicenseTestCase
             version: '1.0.0'
         );
 
-        $this->mockHttpClient->method('request')->willReturn([
+        $this->httpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
             'licenseCompatibility' => '^1.0.0',
@@ -183,7 +183,7 @@ final class LicenseActivationTest extends LicenseTestCase
             'simple/package',
             $repository,
             $validator,
-            $this->mockHttpClient
+            $this->httpClient
         );
 
         $activator->activate('test@example.com', '123456');
@@ -205,7 +205,7 @@ final class LicenseActivationTest extends LicenseTestCase
             'test/package',
             $repository,
             $validator,
-            $this->mockHttpClient
+            $this->httpClient
         );
 
         $request = new Request([
@@ -227,7 +227,7 @@ final class LicenseActivationTest extends LicenseTestCase
             'test/package',
             $repository,
             $validator,
-            $this->mockHttpClient
+            $this->httpClient
         );
 
         $request = new Request([
@@ -250,7 +250,7 @@ final class LicenseActivationTest extends LicenseTestCase
             version: '1.0.0'
         );
 
-        $this->mockHttpClient->method('request')->willReturn([
+        $this->httpClient->method('request')->willReturn([
             'packageName' => 'test/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
             'licenseCompatibility' => '^1.0.0',
@@ -265,7 +265,7 @@ final class LicenseActivationTest extends LicenseTestCase
             'test/package',
             $repository,
             $validator,
-            $this->mockHttpClient
+            $this->httpClient
         );
 
         $request = new Request([
@@ -302,7 +302,7 @@ final class LicenseActivationTest extends LicenseTestCase
             'test/package',
             $repository,
             $validator,
-            $this->mockHttpClient
+            $this->httpClient
         );
 
         $this->expectException(LogicException::class);

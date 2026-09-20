@@ -21,7 +21,7 @@ final class PluginLicenseTest extends LicenseTestCase
     {
         $this->appWithLicenseRoots(['translations' => LicensePanel::translations()]);
 
-        $this->plugin = $this->createMock(Plugin::class);
+        $this->plugin = $this->createStub(Plugin::class);
         $this->plugin->method('version')->willReturn('1.0.0');
     }
 

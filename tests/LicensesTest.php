@@ -9,7 +9,7 @@ use Kirby\Exception\LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 
 #[CoversClass(Licenses::class)]
 final class LicensesTest extends LicenseTestCase
@@ -21,22 +21,22 @@ final class LicensesTest extends LicenseTestCase
     ];
 
     private App $app;
-    private HttpClientInterface&MockObject $mockHttpClient;
+    private HttpClientInterface&Stub $httpClient;
 
     protected function setUp(): void
     {
         $this->app = $this->appWithLicenseRoots();
 
-        $mockPlugin = $this->createMock(\Kirby\Plugin\Plugin::class);
-        $mockPlugin->method('version')->willReturn('1.0.0');
+        $plugin = $this->createStub(\Kirby\Plugin\Plugin::class);
+        $plugin->method('version')->willReturn('1.0.0');
 
         $this->app->extend([
             'plugins' => [
-                'test/package' => $mockPlugin
+                'test/package' => $plugin
             ]
         ]);
 
-        $this->mockHttpClient = $this->createMock(HttpClientInterface::class);
+        $this->httpClient = $this->createStub(HttpClientInterface::class);
     }
 
     #[Test]
@@ -54,11 +54,11 @@ final class LicensesTest extends LicenseTestCase
             'other/package' => $otherLicense
         ]));
 
-        $this->mockHttpClient->method('request')->willThrowException(
+        $this->httpClient->method('request')->willThrowException(
             new LogicException(['fallback' => 'Unauthorized', 'key' => '401', 'translate' => false])
         );
 
-        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->httpClient]);
 
         $this->assertSame('inactive', $licenses->getStatus());
         $this->assertSame(
@@ -84,9 +84,9 @@ final class LicensesTest extends LicenseTestCase
         $storedLicenses = ['test/licensed' => self::LICENSE_STORED_FOR_PLUGIN_1_0_0];
         file_put_contents(self::LICENSE_FILE_PATH, json_encode($storedLicenses));
 
-        $this->mockHttpClient->method('request')->willThrowException($failure);
+        $this->httpClient->method('request')->willThrowException($failure);
 
-        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->httpClient]);
 
         $this->assertSame('active', $licenses->getStatus());
         $this->assertSame(
@@ -104,19 +104,20 @@ final class LicensesTest extends LicenseTestCase
             'test/licensed' => self::LICENSE_STORED_FOR_PLUGIN_1_0_0
         ]));
 
-        $this->mockHttpClient
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient
             ->expects($this->exactly(2))
             ->method('request')
             ->willThrowException(new Exception('Could not resolve host: repo.kirby.tools', 6));
 
-        Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
-        Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        Licenses::read('test/licensed', ['httpClient' => $httpClient]);
+        Licenses::read('test/licensed', ['httpClient' => $httpClient]);
     }
 
     #[Test]
     public function get_status_returns_inactive_when_no_license_file_exists(): void
     {
-        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->httpClient]);
 
         $this->assertInstanceOf(Licenses::class, $licenses);
         $this->assertEquals('inactive', $licenses->getStatus());
@@ -136,7 +137,7 @@ final class LicensesTest extends LicenseTestCase
             ]
         ]));
 
-        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->httpClient]);
         $this->assertSame('active', $licenses->getStatus());
     }
 
@@ -150,7 +151,7 @@ final class LicensesTest extends LicenseTestCase
             ]
         ]));
 
-        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->httpClient]);
         $this->assertEquals('inactive', $licenses->getStatus());
     }
 
@@ -164,7 +165,7 @@ final class LicensesTest extends LicenseTestCase
             ]
         ]));
 
-        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->httpClient]);
         $this->assertEquals('invalid', $licenses->getStatus());
     }
 
@@ -181,7 +182,7 @@ final class LicensesTest extends LicenseTestCase
             ]
         ]));
 
-        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->httpClient]);
         $this->assertSame('incompatible', $licenses->getStatus());
     }
 
@@ -198,7 +199,7 @@ final class LicensesTest extends LicenseTestCase
             ]
         ]));
 
-        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->httpClient]);
         $this->assertSame('upgradeable', $licenses->getStatus());
     }
 
@@ -214,7 +215,7 @@ final class LicensesTest extends LicenseTestCase
             ]
         ]));
 
-        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->httpClient]);
         $license = $licenses->getLicense();
 
         $this->assertIsArray($license);
@@ -231,14 +232,14 @@ final class LicensesTest extends LicenseTestCase
             ]
         ]));
 
-        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->httpClient]);
         $this->assertNull($licenses->getLicense());
     }
 
     #[Test]
     public function get_read_error_returns_null_when_no_license_file_exists(): void
     {
-        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->httpClient]);
 
         $this->assertNull($licenses->getReadError());
     }
@@ -248,7 +249,7 @@ final class LicensesTest extends LicenseTestCase
     {
         file_put_contents(self::LICENSE_FILE_PATH, '{ this is not json');
 
-        $licenses = Licenses::read('test/package', ['httpClient' => $this->mockHttpClient]);
+        $licenses = Licenses::read('test/package', ['httpClient' => $this->httpClient]);
 
         $this->assertNotNull($licenses->getReadError());
         $this->assertSame('inactive', $licenses->getStatus());
