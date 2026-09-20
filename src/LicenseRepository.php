@@ -95,4 +95,14 @@ final class LicenseRepository
         $this->cache = $licenses;
         $this->readError = null;
     }
+
+    public function remove(string $packageName): void
+    {
+        $licenses = $this->readAll();
+        unset($licenses[$packageName]);
+
+        Json::write($this->licenseFile, $licenses);
+
+        $this->cache = $licenses;
+    }
 }

@@ -5,14 +5,23 @@ declare(strict_types = 1);
 use JohannSchopplich\Licensing\Http\HttpClientInterface;
 use JohannSchopplich\Licensing\Licenses;
 use Kirby\Cms\App;
+use Kirby\Exception\LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\MockObject\MockObject;
 
 #[CoversClass(Licenses::class)]
 final class LicensesTest extends LicenseTestCase
 {
+    private const LICENSE_STORED_FOR_PLUGIN_1_0_0 = [
+        'licenseKey' => 'KT1-ABC123-DEF456',
+        'licenseCompatibility' => '^1.0.0',
+        'pluginVersion' => '1.0.0',
+    ];
+
     private App $app;
-    private HttpClientInterface $mockHttpClient;
+    private HttpClientInterface&MockObject $mockHttpClient;
 
     protected function setUp(): void
     {
@@ -28,6 +37,80 @@ final class LicensesTest extends LicenseTestCase
         ]);
 
         $this->mockHttpClient = $this->createMock(HttpClientInterface::class);
+    }
+
+    #[Test]
+    public function read_drops_the_stored_license_on_a_401(): void
+    {
+        App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.1.0'], version: '1.1.0');
+
+        $otherLicense = [
+            'licenseKey' => 'KT1-GHI789-JKL012',
+            'licenseCompatibility' => '^1.0.0',
+            'pluginVersion' => '1.0.0',
+        ];
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
+            'test/licensed' => self::LICENSE_STORED_FOR_PLUGIN_1_0_0,
+            'other/package' => $otherLicense
+        ]));
+
+        $this->mockHttpClient->method('request')->willThrowException(
+            new LogicException(['fallback' => 'Unauthorized', 'key' => '401', 'translate' => false])
+        );
+
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+
+        $this->assertSame('inactive', $licenses->getStatus());
+        $this->assertSame(
+            ['other/package' => $otherLicense],
+            json_decode(file_get_contents(self::LICENSE_FILE_PATH), true)
+        );
+    }
+
+    public static function refreshFailuresOtherThan401(): array
+    {
+        return [
+            'a 500' => [new LogicException(['fallback' => 'Internal Server Error', 'key' => '500', 'translate' => false])],
+            'a network failure' => [new Exception('Could not resolve host: repo.kirby.tools', 6)]
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('refreshFailuresOtherThan401')]
+    public function read_keeps_the_stored_license_on_a_failure_other_than_401(Throwable $failure): void
+    {
+        App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.1.0'], version: '1.1.0');
+
+        $storedLicenses = ['test/licensed' => self::LICENSE_STORED_FOR_PLUGIN_1_0_0];
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode($storedLicenses));
+
+        $this->mockHttpClient->method('request')->willThrowException($failure);
+
+        $licenses = Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+
+        $this->assertSame('active', $licenses->getStatus());
+        $this->assertSame(
+            $storedLicenses,
+            json_decode(file_get_contents(self::LICENSE_FILE_PATH), true)
+        );
+    }
+
+    #[Test]
+    public function read_retries_the_refresh_after_a_failure(): void
+    {
+        App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.1.0'], version: '1.1.0');
+
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
+            'test/licensed' => self::LICENSE_STORED_FOR_PLUGIN_1_0_0
+        ]));
+
+        $this->mockHttpClient
+            ->expects($this->exactly(2))
+            ->method('request')
+            ->willThrowException(new Exception('Could not resolve host: repo.kirby.tools', 6));
+
+        Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
+        Licenses::read('test/licensed', ['httpClient' => $this->mockHttpClient]);
     }
 
     #[Test]
