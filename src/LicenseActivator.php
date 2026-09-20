@@ -51,7 +51,7 @@ final class LicenseActivator
             ]
         ]);
 
-        if ($response['packageName'] !== $this->packageName) {
+        if (($response['packageName'] ?? null) !== $this->packageName) {
             throw new LogicException('License key not valid for this plugin');
         }
 
