@@ -2,13 +2,13 @@
 
 declare(strict_types = 1);
 
-use Kirby\Api\Api;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Http\Route;
 use Kirby\Toolkit\I18n;
 use KirbyTools\Licensing\ActivationException;
 use KirbyTools\Licensing\ActivationOutcome;
+use KirbyTools\Licensing\Http\HttpClientInterface;
 use KirbyTools\Licensing\LicensePanel;
 use KirbyTools\Licensing\LicenseStatus;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -56,10 +56,6 @@ final class LicensePanelTest extends LicenseTestCase
     public static function activationHandlers(): array
     {
         return [
-            'api route action' => [
-                LicensePanel::api(self::PACKAGE_NAME)[0]['action'],
-                fn (): Api => App::instance()->api()
-            ],
             'dialog submit handler' => [
                 array_column(LicensePanel::dialogs(self::PACKAGE_NAME, 'Test Plugin'), 'submit')[0],
                 fn (): Route => new Route('', 'POST', fn () => null)
@@ -305,5 +301,45 @@ final class LicensePanelTest extends LicenseTestCase
 
         $this->assertSame('Could not resolve host: repo.kirby.tools', $e->getMessage());
         $this->assertSame(['package' => self::PACKAGE_NAME], $e->getDetails());
+    }
+
+    #[Test]
+    public function activate_dialog_submit_returns_message_event_and_reload(): void
+    {
+        // Kirby registers the plugin without the `kirby-` prefix its package name carries.
+        $packageName = 'johannschopplich/kirby-test-plugin';
+
+        $this->appWithActivationRequest('KT1-ABC123-DEF456');
+        App::plugin(name: 'johannschopplich/test-plugin', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
+
+        $httpClient = $this->createStub(HttpClientInterface::class);
+        $httpClient->method('request')->willReturn([
+            'packageName' => $packageName,
+            'licenseKey' => 'KT1-ABC123-DEF456',
+            'licenseCompatibility' => '^1.0.0',
+            'order' => ['createdAt' => '2024-01-01T00:00:00Z']
+        ]);
+
+        $submit = LicensePanel::dialogs($packageName, 'Test Plugin', ['httpClient' => $httpClient])['johannschopplich-kirby-test-plugin/activate']['submit'];
+
+        $this->assertSame(
+            [
+                'message' => 'Plugin activated!',
+                'event' => ['kirby-tools.license.activate', 'kirby-tools.license.activate.test-plugin'],
+                'reload' => true,
+                'package' => $packageName,
+                'status' => 'active'
+            ],
+            $submit->call(new Route('', 'POST', $submit))
+        );
+    }
+
+    #[Test]
+    public function activation_success_translates_its_message_when_the_translation_cache_lost_the_plugin_keys(): void
+    {
+        I18n::$locale = fn (): string => 'de';
+        I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];
+
+        $this->assertSame('Plugin aktiviert!', LicensePanel::activationSuccess(self::PACKAGE_NAME)['message']);
     }
 }

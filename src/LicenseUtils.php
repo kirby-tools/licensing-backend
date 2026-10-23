@@ -38,14 +38,6 @@ final class LicenseUtils
     }
 
     /**
-     * Converts package name to API prefix (e.g., `johannschopplich/kirby-copilot` → `__copilot__`).
-     */
-    public static function toApiPrefix(string $packageName): string
-    {
-        return '__' . self::toPluginId($packageName) . '__';
-    }
-
-    /**
      * Converts a compatibility constraint like `^1 || ^2 || ^3` into the
      * compatible versions `v1–v3` customers read.
      */

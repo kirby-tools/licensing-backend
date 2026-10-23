@@ -71,24 +71,17 @@ final class LicenseActivator
     /**
      * @throws ActivationException When `email` or `licenseKey` is missing, or when activation fails
      */
-    public function activateFromRequest(Request|null $request = null): array
+    public function activateFromRequest(Request|null $request = null): void
     {
         $request ??= App::instance()->request();
         $email = $request->get('email');
-        // TODO: Remove the `orderId` fallback once all plugins ship with licensing-backend >=0.9.
-        $licenseKey = $request->get('licenseKey') ?? $request->get('orderId');
+        $licenseKey = $request->get('licenseKey');
 
         if (!$email || !$licenseKey) {
             throw new ActivationException(ActivationOutcome::MissingParameters);
         }
 
         $this->activate($email, (string)$licenseKey);
-
-        return [
-            'code' => 200,
-            'status' => 'ok',
-            'message' => 'License key successfully activated'
-        ];
     }
 
     /**

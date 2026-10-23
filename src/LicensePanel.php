@@ -25,27 +25,10 @@ final class LicensePanel
 
     private static array $checkedLocales = [];
 
-    public static function api(string $packageName): array
-    {
-        $apiPrefix = LicenseUtils::toApiPrefix($packageName);
-
-        return [
-            [
-                'pattern' => "{$apiPrefix}/activate",
-                'method' => 'POST',
-                'action' => self::repairingTranslationCache(function () use ($packageName) {
-                    try {
-                        $licenses = Licenses::read($packageName);
-                        return $licenses->activateFromRequest();
-                    } catch (Throwable $e) {
-                        throw LicensePanel::activationFailure($e, $packageName);
-                    }
-                })
-            ]
-        ];
-    }
-
-    public static function dialogs(string $packageName, string $pluginLabel): array
+    /**
+     * @param array $options Passed on to `Licenses::read()`
+     */
+    public static function dialogs(string $packageName, string $pluginLabel, array $options = []): array
     {
         $dialogPrefix = LicenseUtils::toPackageSlug($packageName);
         $pluginId = LicenseUtils::toPluginId($packageName);
@@ -187,17 +170,15 @@ final class LicensePanel
                         ]
                     ];
                 },
-                'submit' => function () use ($packageName) {
+                'submit' => function () use ($packageName, $options) {
                     try {
-                        $licenses = Licenses::read($packageName);
+                        $licenses = Licenses::read($packageName, $options);
                         $licenses->activateFromRequest();
                     } catch (Throwable $e) {
                         throw LicensePanel::activationFailure($e, $packageName);
                     }
 
-                    return [
-                        'redirect' => 'system'
-                    ];
+                    return LicensePanel::activationSuccess($packageName);
                 }
             ]
         ];
@@ -213,6 +194,27 @@ final class LicensePanel
         self::repairTranslationCache();
 
         return self::resolveTranslation('kirby-tools.license.status.' . $status->value, $status->value);
+    }
+
+    /**
+     * Builds the Panel actions for a successful activation: a toast, a shared
+     * event plus one named after the plugin, and a reload of the current view,
+     * which hands every field a fresh `licenseStatus`. The event payload is
+     * this array, so listeners read `package` and `status` from it.
+     */
+    public static function activationSuccess(string $packageName): array
+    {
+        self::repairTranslationCache();
+
+        $pluginId = LicenseUtils::toPluginId($packageName);
+
+        return [
+            'message' => self::resolveTranslation('kirby-tools.license.activate.success', 'Plugin activated!'),
+            'event' => ['kirby-tools.license.activate', "kirby-tools.license.activate.{$pluginId}"],
+            'reload' => true,
+            'package' => $packageName,
+            'status' => LicenseStatus::Active->value
+        ];
     }
 
     /**
@@ -302,6 +304,7 @@ final class LicensePanel
             'kirby-tools.license.activate.licenseKey' => 'Clave de licencia',
             'kirby-tools.license.activate.licenseKey.help' => 'Encuentra tu clave de licencia en el correo de confirmación de pedido o en <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
             'kirby-tools.license.activate.submit' => 'Activar licencia',
+            'kirby-tools.license.activate.success' => '¡Plugin activado!',
 
             'kirby-tools.license.info.key' => 'Clave de licencia',
             'kirby-tools.license.info.version' => 'Versión',
@@ -337,6 +340,7 @@ final class LicensePanel
                 'kirby-tools.license.activate.licenseKey' => 'License Key',
                 'kirby-tools.license.activate.licenseKey.help' => 'Find your license key in your order confirmation email or at <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
                 'kirby-tools.license.activate.submit' => 'Activate License',
+                'kirby-tools.license.activate.success' => 'Plugin activated!',
 
                 'kirby-tools.license.info.key' => 'License Key',
                 'kirby-tools.license.info.version' => 'Version',
@@ -370,6 +374,7 @@ final class LicensePanel
                 'kirby-tools.license.activate.licenseKey' => 'Lizenzschlüssel',
                 'kirby-tools.license.activate.licenseKey.help' => 'Den Lizenzschlüssel findest du in deiner Bestellbestätigung per E-Mail oder auf <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
                 'kirby-tools.license.activate.submit' => 'Lizenz aktivieren',
+                'kirby-tools.license.activate.success' => 'Plugin aktiviert!',
 
                 'kirby-tools.license.info.key' => 'Lizenzschlüssel',
                 'kirby-tools.license.info.version' => 'Version',
@@ -403,6 +408,7 @@ final class LicensePanel
                 'kirby-tools.license.activate.licenseKey' => 'Clé de licence',
                 'kirby-tools.license.activate.licenseKey.help' => 'Retrouvez votre clé de licence dans votre e-mail de confirmation de commande ou sur <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
                 'kirby-tools.license.activate.submit' => 'Activer la licence',
+                'kirby-tools.license.activate.success' => 'Plugin activé !',
 
                 'kirby-tools.license.info.key' => 'Clé de licence',
                 'kirby-tools.license.info.version' => 'Version',
@@ -436,6 +442,7 @@ final class LicensePanel
                 'kirby-tools.license.activate.licenseKey' => 'Licentiesleutel',
                 'kirby-tools.license.activate.licenseKey.help' => 'Je licentiesleutel vind je in je bestelbevestiging per e-mail of op <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
                 'kirby-tools.license.activate.submit' => 'Licentie activeren',
+                'kirby-tools.license.activate.success' => 'Plugin geactiveerd!',
 
                 'kirby-tools.license.info.key' => 'Licentiesleutel',
                 'kirby-tools.license.info.version' => 'Versie',
@@ -469,6 +476,7 @@ final class LicensePanel
                 'kirby-tools.license.activate.licenseKey' => 'Chiave di licenza',
                 'kirby-tools.license.activate.licenseKey.help' => 'Trova la tua chiave di licenza nell\'e-mail di conferma dell\'ordine o su <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
                 'kirby-tools.license.activate.submit' => 'Attiva licenza',
+                'kirby-tools.license.activate.success' => 'Plugin attivato!',
 
                 'kirby-tools.license.info.key' => 'Chiave di licenza',
                 'kirby-tools.license.info.version' => 'Versione',
@@ -502,6 +510,7 @@ final class LicensePanel
                 'kirby-tools.license.activate.licenseKey' => 'Chave de licença',
                 'kirby-tools.license.activate.licenseKey.help' => 'Encontre a sua chave de licença no e-mail de confirmação da encomenda ou em <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
                 'kirby-tools.license.activate.submit' => 'Ativar licença',
+                'kirby-tools.license.activate.success' => 'Plugin ativado!',
 
                 'kirby-tools.license.info.key' => 'Chave de licença',
                 'kirby-tools.license.info.version' => 'Versão',

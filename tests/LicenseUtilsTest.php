@@ -19,14 +19,6 @@ final class LicenseUtilsTest extends TestCase
     }
 
     #[Test]
-    public function to_api_prefix_wraps_the_plugin_id_in_double_underscores(): void
-    {
-        $this->assertEquals('__copilot__', LicenseUtils::toApiPrefix('johannschopplich/kirby-copilot'));
-        $this->assertEquals('__content-translator__', LicenseUtils::toApiPrefix('johannschopplich/kirby-content-translator'));
-        $this->assertEquals('__seo-audit__', LicenseUtils::toApiPrefix('johannschopplich/kirby-seo-audit'));
-    }
-
-    #[Test]
     public function to_package_slug_replaces_the_slash_with_a_hyphen(): void
     {
         $this->assertEquals('johannschopplich-kirby-copilot', LicenseUtils::toPackageSlug('johannschopplich/kirby-copilot'));

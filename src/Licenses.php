@@ -109,8 +109,8 @@ final class Licenses
         return $this->activator->isActivated();
     }
 
-    public function activateFromRequest(): array
+    public function activateFromRequest(): void
     {
-        return $this->activator->activateFromRequest();
+        $this->activator->activateFromRequest();
     }
 }
