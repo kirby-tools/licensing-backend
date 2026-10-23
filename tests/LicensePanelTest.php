@@ -289,8 +289,26 @@ final class LicensePanelTest extends LicenseTestCase
         $this->assertSame(['package' => self::PACKAGE_NAME, 'outcome' => 'requestFailed'], $e->getDetails());
     }
 
+    public static function unwritableLicenseFiles(): array
+    {
+        return [
+            'a read-only file' => [
+                function (string $path): void {
+                    file_put_contents($path, '{}');
+                    chmod($path, 0444);
+                },
+                fn (string $path): bool => chmod($path, 0644)
+            ],
+            'a directory' => [
+                fn (string $path): bool => mkdir($path),
+                fn (string $path): bool => rmdir($path)
+            ]
+        ];
+    }
+
     #[Test]
-    public function activate_dialog_submit_keeps_the_message_when_the_license_file_cannot_be_written(): void
+    #[DataProvider('unwritableLicenseFiles')]
+    public function activate_dialog_submit_fails_when_the_license_file_cannot_be_written(Closure $block, Closure $unblock): void
     {
         $packageName = 'johannschopplich/kirby-test-plugin';
 
@@ -307,19 +325,17 @@ final class LicensePanelTest extends LicenseTestCase
 
         $submit = LicensePanel::dialogs($packageName, 'Test Plugin', ['httpClient' => $httpClient])['johannschopplich-kirby-test-plugin/activate']['submit'];
 
-        // A read-only license file makes the write fail.
-        file_put_contents(self::LICENSE_FILE_PATH, '{}');
-        chmod(self::LICENSE_FILE_PATH, 0444);
+        $block(self::LICENSE_FILE_PATH);
 
         try {
             $submit->call(new Route('', 'POST', $submit));
-            $this->fail('The submit did not report the failure.');
+            $this->fail('The submit reported success.');
         } catch (InvalidArgumentException $e) {
             $this->assertNotInstanceOf(ActivationException::class, $e->getPrevious());
-            $this->assertStringContainsString('is not writable', $e->getMessage());
+            $this->assertSame('The file "' . self::LICENSE_FILE_PATH . '" is not writable', $e->getMessage());
             $this->assertSame(['package' => $packageName], $e->getDetails());
         } finally {
-            chmod(self::LICENSE_FILE_PATH, 0644);
+            $unblock(self::LICENSE_FILE_PATH);
         }
     }
 
