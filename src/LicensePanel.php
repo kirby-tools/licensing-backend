@@ -12,8 +12,9 @@ use Kirby\Toolkit\Str;
 use Throwable;
 
 /**
- * Every Kirby Tools plugin registers these extensions verbatim, so the dialog IDs
- * built here must stay in sync with the ones `PluginLicense::toKirbyStatus` emits.
+ * Every Kirby Tools plugin registers these extensions verbatim, so the license
+ * dialog ID built here must stay in sync with the one `PluginLicense::toKirbyStatus`
+ * emits; both take the activation dialog ID from `LicenseUtils::toActivationDialog`.
  *
  * @link      https://kirby.tools
  * @copyright Johann Schopplich
@@ -128,7 +129,7 @@ final class LicensePanel
             ],
 
             // Reached from `PluginLicense::toKirbyStatus` for inactive and invalid licenses.
-            "{$dialogPrefix}/activate" => [
+            LicenseUtils::toActivationDialog($packageName) => [
                 'load' => function () use ($packageName) {
                     $info = [
                         'type' => 'info',

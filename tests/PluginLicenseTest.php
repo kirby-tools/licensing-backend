@@ -6,6 +6,7 @@ use Kirby\Cms\App;
 use Kirby\Plugin\Plugin;
 use Kirby\Toolkit\I18n;
 use KirbyTools\Licensing\LicensePanel;
+use KirbyTools\Licensing\LicenseUtils;
 use KirbyTools\Licensing\PluginLicense;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -80,6 +81,15 @@ final class PluginLicenseTest extends LicenseTestCase
         $this->assertSame('missing', $status['value']);
         $this->assertSame('key', $status['icon']);
         $this->assertSame('love', $status['theme']);
+    }
+
+    #[Test]
+    public function status_opens_the_activation_dialog_the_panel_registers(): void
+    {
+        $dialog = $this->createLicense()->status()->toArray()['dialog'];
+
+        $this->assertSame(LicenseUtils::toActivationDialog(self::PACKAGE_NAME), $dialog);
+        $this->assertArrayHasKey($dialog, LicensePanel::dialogs(self::PACKAGE_NAME, 'Test Package'));
     }
 
     #[Test]

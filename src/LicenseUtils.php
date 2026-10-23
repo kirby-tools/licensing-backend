@@ -30,6 +30,15 @@ final class LicenseUtils
     }
 
     /**
+     * Builds the ID of the activation dialog `LicensePanel::dialogs()` registers
+     * (e.g., `johannschopplich/kirby-copilot` → `johannschopplich-kirby-copilot/activate`).
+     */
+    public static function toActivationDialog(string $packageName): string
+    {
+        return self::toPackageSlug($packageName) . '/activate';
+    }
+
+    /**
      * Extracts plugin ID from package name (e.g., `johannschopplich/kirby-copilot` → `copilot`).
      */
     public static function toPluginId(string $packageName): string

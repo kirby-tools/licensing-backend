@@ -35,7 +35,37 @@ Kirby::plugin(
 );
 ```
 
-`LicensePanel::dialogs()` registers `{vendor}-{package}/activate` and `{vendor}-{package}/license`. Any Panel button opens the activation dialog by its id. On success, the dialog shows a toast, emits `kirby-tools.license.activate` and `kirby-tools.license.activate.{pluginId}` with `package` and `status` in the payload, and reloads the current view. A failure reaches the Panel translated from its `ActivationOutcome`.
+`LicensePanel::dialogs()` registers `{vendor}-{package}/activate` and `{vendor}-{package}/license`. A field hands the activation dialog's id and the license status to its Vue component, whose buttons open the dialog by that id:
+
+```php
+use Kirby\Form\Field\DisplayField;
+use Kirby\Reflection\Attributes\Prop;
+use KirbyTools\Licensing\Licenses;
+use KirbyTools\Licensing\LicenseUtils;
+
+final class CopilotField extends DisplayField
+{
+    private const PACKAGE_NAME = 'johannschopplich/kirby-copilot';
+
+    #[Prop(computed: true)]
+    protected string $licenseDialog = '';
+
+    #[Prop(computed: true)]
+    protected string $licenseStatus = 'inactive';
+
+    public function licenseDialog(): string
+    {
+        return LicenseUtils::toActivationDialog(self::PACKAGE_NAME);
+    }
+
+    public function licenseStatus(): string
+    {
+        return Licenses::read(self::PACKAGE_NAME)->getStatus();
+    }
+}
+```
+
+On success, the dialog shows a toast, emits `kirby-tools.license.activate` and `kirby-tools.license.activate.{pluginId}` with `package` and `status` in the payload, and reloads the current view. A failure reaches the Panel translated from its `ActivationOutcome`.
 
 ## Classes
 
