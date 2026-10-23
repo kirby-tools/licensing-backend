@@ -2,12 +2,13 @@
 
 declare(strict_types = 1);
 
-use Kirby\Cms\Api;
+use Kirby\Api\Api;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
-use Kirby\Exception\LogicException;
 use Kirby\Http\Route;
 use Kirby\Toolkit\I18n;
+use KirbyTools\Licensing\ActivationException;
+use KirbyTools\Licensing\ActivationOutcome;
 use KirbyTools\Licensing\LicensePanel;
 use KirbyTools\Licensing\LicenseStatus;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -82,6 +83,19 @@ final class LicensePanelTest extends LicenseTestCase
             'latin american spanish' => ['es_419', 'Activar ahora'],
             'european portuguese' => ['pt_PT', 'Ativar agora']
         ];
+    }
+
+    public static function outcomesPerLocale(): array
+    {
+        $cases = [];
+
+        foreach (array_keys(LicensePanel::translations()) as $locale) {
+            foreach (ActivationOutcome::cases() as $outcome) {
+                $cases["{$outcome->name} in {$locale}"] = [$locale, $outcome];
+            }
+        }
+
+        return $cases;
     }
 
     #[Test]
@@ -236,12 +250,60 @@ final class LicensePanelTest extends LicenseTestCase
         try {
             $handler->call($scope());
         } catch (InvalidArgumentException $e) {
-            $this->assertInstanceOf(LogicException::class, $e->getPrevious());
+            $this->assertInstanceOf(ActivationException::class, $e->getPrevious());
             $this->assertSame(self::PACKAGE_NAME, $e->getDetails()['package']);
 
             return;
         }
 
         $this->fail('The handler did not report the failure.');
+    }
+
+    #[Test]
+    #[DataProvider('outcomesPerLocale')]
+    public function activation_failure_translates_every_outcome_in_every_locale(string $locale, ActivationOutcome $outcome): void
+    {
+        I18n::$locale = fn (): string => $locale;
+
+        $expected = LicensePanel::translations()[$locale]['kirby-tools.license.error.' . $outcome->value] ?? null;
+        $this->assertIsString($expected);
+
+        $e = LicensePanel::activationFailure(new ActivationException($outcome, ['status' => 500]), self::PACKAGE_NAME);
+
+        $this->assertSame(str_replace('{status}', '500', $expected), $e->getMessage());
+    }
+
+    #[Test]
+    public function activation_failure_names_the_status_of_a_failed_request(): void
+    {
+        $e = LicensePanel::activationFailure(
+            new ActivationException(ActivationOutcome::RequestFailed, ['status' => 503]),
+            self::PACKAGE_NAME
+        );
+
+        $this->assertStringContainsString('503', $e->getMessage());
+    }
+
+    #[Test]
+    public function activation_failure_details_carry_only_the_package_and_the_outcome(): void
+    {
+        $e = LicensePanel::activationFailure(
+            new ActivationException(ActivationOutcome::RequestFailed, ['status' => 500]),
+            self::PACKAGE_NAME
+        );
+
+        $this->assertSame(['package' => self::PACKAGE_NAME, 'outcome' => 'requestFailed'], $e->getDetails());
+    }
+
+    #[Test]
+    public function activation_failure_keeps_the_message_of_a_failure_without_an_outcome(): void
+    {
+        $e = LicensePanel::activationFailure(
+            new Exception('Could not resolve host: repo.kirby.tools', 6),
+            self::PACKAGE_NAME
+        );
+
+        $this->assertSame('Could not resolve host: repo.kirby.tools', $e->getMessage());
+        $this->assertSame(['package' => self::PACKAGE_NAME], $e->getDetails());
     }
 }

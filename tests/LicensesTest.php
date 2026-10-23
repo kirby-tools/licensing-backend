@@ -3,7 +3,8 @@
 declare(strict_types = 1);
 
 use Kirby\Cms\App;
-use Kirby\Exception\LogicException;
+use KirbyTools\Licensing\ActivationException;
+use KirbyTools\Licensing\ActivationOutcome;
 use KirbyTools\Licensing\Http\HttpClientInterface;
 use KirbyTools\Licensing\Licenses;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -55,7 +56,7 @@ final class LicensesTest extends LicenseTestCase
         ]));
 
         $this->httpClient->method('request')->willThrowException(
-            new LogicException(['fallback' => 'Unauthorized', 'key' => '401', 'translate' => false])
+            new ActivationException(ActivationOutcome::InvalidCredentials)
         );
 
         $licenses = Licenses::read('test/licensed', ['httpClient' => $this->httpClient]);
@@ -70,7 +71,7 @@ final class LicensesTest extends LicenseTestCase
     public static function refreshFailuresOtherThan401(): array
     {
         return [
-            'a 500' => [new LogicException(['fallback' => 'Internal Server Error', 'key' => '500', 'translate' => false])],
+            'a 500' => [new ActivationException(ActivationOutcome::RequestFailed, ['status' => 500])],
             'a network failure' => [new Exception('Could not resolve host: repo.kirby.tools', 6)]
         ];
     }

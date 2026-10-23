@@ -5,9 +5,10 @@ declare(strict_types = 1);
 namespace KirbyTools\Licensing\Http;
 
 use Kirby\Cms\App;
-use Kirby\Exception\LogicException;
 use Kirby\Http\Remote;
 use Kirby\Toolkit\A;
+use KirbyTools\Licensing\ActivationException;
+use KirbyTools\Licensing\ActivationOutcome;
 
 final class KirbyHttpClient implements HttpClientInterface
 {
@@ -19,17 +20,16 @@ final class KirbyHttpClient implements HttpClientInterface
             ]
         ], $options));
 
-        if ($response->code() < 200 || $response->code() >= 300) {
-            $message = $response->json()['message'] ?? 'Request failed';
+        $status = $response->code();
 
-            // The status code becomes the exception key, which is what
-            // `LicensePanel::activationFailure()` reports as `details.cause`.
-            // TODO: Drop K4 compat in v1 – use named arguments once Kirby 5 is the floor.
-            throw new LogicException([
-                'fallback' => $message,
-                'key' => (string)$response->code(),
-                'translate' => false
-            ]);
+        // The licensing API answers 401 for unknown credentials and license
+        // keys alike; the status code is the contract, the body is not read.
+        if ($status === 401) {
+            throw new ActivationException(ActivationOutcome::InvalidCredentials);
+        }
+
+        if ($status === null || $status < 200 || $status >= 300) {
+            throw new ActivationException(ActivationOutcome::RequestFailed, ['status' => $status]);
         }
 
         return $response->json();

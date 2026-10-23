@@ -8,6 +8,7 @@ use Closure;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Toolkit\I18n;
+use Kirby\Toolkit\Str;
 use Throwable;
 
 /**
@@ -20,21 +21,6 @@ use Throwable;
  */
 final class LicensePanel
 {
-    /**
-     * Translation keys for license activation failures, keyed by exception message.
-     *
-     * The keys are matched verbatim: they come either from `LicenseActivator`
-     * or, like `Unauthorized`, from the licensing API's error response. An
-     * unmapped message is surfaced to the user untranslated.
-     */
-    public const ACTIVATION_ERROR_KEYS = [
-        'Unauthorized' => 'kirby-tools.license.error.invalidCredentials',
-        'License key already activated' => 'kirby-tools.license.error.alreadyActivated',
-        'License key not valid for this plugin' => 'kirby-tools.license.error.invalid',
-        'License key not valid for this plugin version' => 'kirby-tools.license.error.incompatible',
-        'License key not valid for this plugin version, please upgrade your license' => 'kirby-tools.license.error.upgradeable'
-    ];
-
     private static App|null $checkedApp = null;
 
     private static array $checkedLocales = [];
@@ -233,25 +219,35 @@ final class LicensePanel
      * Translates an activation failure for the Panel, keeping the cause attached.
      *
      * `details` is not debug-gated, so it carries only the package and the
-     * cause's key, never the licensing API's response body.
+     * outcome, never the licensing API's response. A failure without an
+     * outcome, like a network error, keeps its own message.
      */
     public static function activationFailure(Throwable $e, string $packageName): InvalidArgumentException
     {
-        $message = $e->getMessage();
-        $translationKey = self::ACTIVATION_ERROR_KEYS[$message] ?? null;
+        if (!$e instanceof ActivationException) {
+            return new InvalidArgumentException(
+                message: $e->getMessage(),
+                details: ['package' => $packageName],
+                previous: $e
+            );
+        }
 
-        // `message` would make Kirby 5's constructor return before it stores
-        // `previous`, so the text goes in as an untranslated fallback instead.
-        // TODO: Drop K4 compat in v1 – use named arguments once Kirby 5 is the floor.
-        return new InvalidArgumentException([
-            'fallback' => $translationKey !== null ? self::resolveTranslation($translationKey, $message) : $message,
-            'details' => [
+        $data = match ($e->outcome) {
+            ActivationOutcome::RequestFailed => ['status' => $e->getDetails()['status'] ?? '–'],
+            default => []
+        };
+
+        return new InvalidArgumentException(
+            message: Str::template(
+                self::resolveTranslation('kirby-tools.license.error.' . $e->outcome->value, $e->getMessage()),
+                $data
+            ),
+            details: [
                 'package' => $packageName,
-                'cause' => $e->getCode() ?: $e::class
+                'outcome' => $e->outcome->value
             ],
-            'previous' => $e,
-            'translate' => false
-        ]);
+            previous: $e
+        );
     }
 
     /**
@@ -322,7 +318,9 @@ final class LicensePanel
             'kirby-tools.license.error.alreadyActivated' => 'Licencia ya activada',
             'kirby-tools.license.error.invalid' => 'Licencia no válida para este plugin',
             'kirby-tools.license.error.incompatible' => 'Licencia no válida para esta versión del plugin',
-            'kirby-tools.license.error.upgradeable' => 'Licencia no válida para esta versión del plugin. Por favor, actualiza tu licencia.'
+            'kirby-tools.license.error.upgradeable' => 'Licencia no válida para esta versión del plugin. Por favor, actualiza tu licencia.',
+            'kirby-tools.license.error.missingParameters' => 'Introduce tu correo electrónico y tu clave de licencia',
+            'kirby-tools.license.error.requestFailed' => 'El servidor de licencias no pudo procesar la solicitud (estado {status}). Inténtalo de nuevo más tarde.'
         ];
 
         return [
@@ -355,7 +353,9 @@ final class LicensePanel
                 'kirby-tools.license.error.alreadyActivated' => 'License already activated',
                 'kirby-tools.license.error.invalid' => 'License not valid for this plugin',
                 'kirby-tools.license.error.incompatible' => 'License not valid for this plugin version',
-                'kirby-tools.license.error.upgradeable' => 'License not valid for this plugin version. Please upgrade your license.'
+                'kirby-tools.license.error.upgradeable' => 'License not valid for this plugin version. Please upgrade your license.',
+                'kirby-tools.license.error.missingParameters' => 'Please enter your email address and license key',
+                'kirby-tools.license.error.requestFailed' => 'The license server could not process the request (status {status}). Please try again later.'
             ],
             'de' => [
                 'kirby-tools.license.status.active' => 'Lizenziert',
@@ -386,7 +386,9 @@ final class LicensePanel
                 'kirby-tools.license.error.alreadyActivated' => 'Lizenz bereits aktiviert',
                 'kirby-tools.license.error.invalid' => 'Lizenz ungültig für dieses Plugin',
                 'kirby-tools.license.error.incompatible' => 'Lizenz ungültig für diese Plugin-Version',
-                'kirby-tools.license.error.upgradeable' => 'Lizenz ungültig für diese Plugin-Version. Bitte Lizenz upgraden.'
+                'kirby-tools.license.error.upgradeable' => 'Lizenz ungültig für diese Plugin-Version. Bitte Lizenz upgraden.',
+                'kirby-tools.license.error.missingParameters' => 'Bitte gib deine E-Mail-Adresse und deinen Lizenzschlüssel ein',
+                'kirby-tools.license.error.requestFailed' => 'Der Lizenzserver konnte die Anfrage nicht verarbeiten (Status {status}). Bitte versuche es später erneut.'
             ],
             'fr' => [
                 'kirby-tools.license.status.active' => 'Sous licence',
@@ -417,7 +419,9 @@ final class LicensePanel
                 'kirby-tools.license.error.alreadyActivated' => 'Licence déjà activée',
                 'kirby-tools.license.error.invalid' => 'Licence invalide pour ce plugin',
                 'kirby-tools.license.error.incompatible' => 'Licence invalide pour cette version du plugin',
-                'kirby-tools.license.error.upgradeable' => 'Licence invalide pour cette version du plugin. Veuillez mettre à niveau votre licence.'
+                'kirby-tools.license.error.upgradeable' => 'Licence invalide pour cette version du plugin. Veuillez mettre à niveau votre licence.',
+                'kirby-tools.license.error.missingParameters' => 'Veuillez saisir votre adresse e-mail et votre clé de licence',
+                'kirby-tools.license.error.requestFailed' => 'Le serveur de licences n\'a pas pu traiter la demande (statut {status}). Veuillez réessayer plus tard.'
             ],
             'nl' => [
                 'kirby-tools.license.status.active' => 'Gelicentieerd',
@@ -448,7 +452,9 @@ final class LicensePanel
                 'kirby-tools.license.error.alreadyActivated' => 'Licentie al geactiveerd',
                 'kirby-tools.license.error.invalid' => 'Licentie ongeldig voor deze plugin',
                 'kirby-tools.license.error.incompatible' => 'Licentie ongeldig voor deze pluginversie',
-                'kirby-tools.license.error.upgradeable' => 'Licentie ongeldig voor deze pluginversie. Upgrade je licentie.'
+                'kirby-tools.license.error.upgradeable' => 'Licentie ongeldig voor deze pluginversie. Upgrade je licentie.',
+                'kirby-tools.license.error.missingParameters' => 'Voer je e-mailadres en licentiesleutel in',
+                'kirby-tools.license.error.requestFailed' => 'De licentieserver kon het verzoek niet verwerken (status {status}). Probeer het later opnieuw.'
             ],
             'it' => [
                 'kirby-tools.license.status.active' => 'Con licenza',
@@ -479,7 +485,9 @@ final class LicensePanel
                 'kirby-tools.license.error.alreadyActivated' => 'Licenza già attivata',
                 'kirby-tools.license.error.invalid' => 'Licenza non valida per questo plugin',
                 'kirby-tools.license.error.incompatible' => 'Licenza non valida per questa versione del plugin',
-                'kirby-tools.license.error.upgradeable' => 'Licenza non valida per questa versione del plugin. Aggiorna la tua licenza.'
+                'kirby-tools.license.error.upgradeable' => 'Licenza non valida per questa versione del plugin. Aggiorna la tua licenza.',
+                'kirby-tools.license.error.missingParameters' => 'Inserisci il tuo indirizzo email e la chiave di licenza',
+                'kirby-tools.license.error.requestFailed' => 'Il server delle licenze non ha potuto elaborare la richiesta (stato {status}). Riprova più tardi.'
             ],
             'pt_PT' => [
                 'kirby-tools.license.status.active' => 'Licenciado',
@@ -510,7 +518,9 @@ final class LicensePanel
                 'kirby-tools.license.error.alreadyActivated' => 'Licença já ativada',
                 'kirby-tools.license.error.invalid' => 'Licença não válida para este plugin',
                 'kirby-tools.license.error.incompatible' => 'Licença não válida para esta versão do plugin',
-                'kirby-tools.license.error.upgradeable' => 'Licença não válida para esta versão do plugin. Por favor, atualize a sua licença.'
+                'kirby-tools.license.error.upgradeable' => 'Licença não válida para esta versão do plugin. Por favor, atualize a sua licença.',
+                'kirby-tools.license.error.missingParameters' => 'Introduza o seu endereço de e-mail e a chave de licença',
+                'kirby-tools.license.error.requestFailed' => 'O servidor de licenças não conseguiu processar o pedido (estado {status}). Tente novamente mais tarde.'
             ],
             'es' => $spanish,
             'es_ES' => $spanish,

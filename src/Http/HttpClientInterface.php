@@ -7,7 +7,8 @@ namespace KirbyTools\Licensing\Http;
 interface HttpClientInterface
 {
     /**
-     * @throws \Exception When the request fails or the response status is outside the 2xx range
+     * @throws \KirbyTools\Licensing\ActivationException When the response status is outside the 2xx range
+     * @throws \Exception When the request itself fails
      */
     public function request(string $url, array $options = []): array;
 }

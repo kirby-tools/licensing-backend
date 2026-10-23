@@ -3,14 +3,16 @@
 declare(strict_types = 1);
 
 use Kirby\Cms\App;
-use Kirby\Exception\LogicException;
 use Kirby\Http\Request;
+use KirbyTools\Licensing\ActivationException;
+use KirbyTools\Licensing\ActivationOutcome;
 use KirbyTools\Licensing\Http\HttpClientInterface;
 use KirbyTools\Licensing\LicenseActivator;
 use KirbyTools\Licensing\LicenseRepository;
 use KirbyTools\Licensing\Licenses;
 use KirbyTools\Licensing\LicenseValidator;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\Stub;
 
@@ -25,6 +27,19 @@ final class LicenseActivationTest extends LicenseTestCase
         $this->app = $this->appWithLicenseRoots();
 
         $this->httpClient = $this->createStub(HttpClientInterface::class);
+    }
+
+    private function assertActivationFails(ActivationOutcome $outcome, Closure $activation): ActivationException
+    {
+        try {
+            $activation();
+        } catch (ActivationException $e) {
+            $this->assertSame($outcome, $e->outcome);
+
+            return $e;
+        }
+
+        $this->fail('The activation did not fail.');
     }
 
     #[Test]
@@ -89,10 +104,10 @@ final class LicenseActivationTest extends LicenseTestCase
             $this->httpClient
         );
 
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('License key not valid for this plugin');
-
-        $activator->activate('test@example.com', '123456');
+        $this->assertActivationFails(
+            ActivationOutcome::WrongPlugin,
+            fn () => $activator->activate('test@example.com', '123456')
+        );
     }
 
     #[Test]
@@ -123,10 +138,73 @@ final class LicenseActivationTest extends LicenseTestCase
             $this->httpClient
         );
 
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('License key not valid for this plugin version, please upgrade your license');
+        $this->assertActivationFails(
+            ActivationOutcome::Upgradeable,
+            fn () => $activator->activate('test@example.com', '123456')
+        );
+    }
 
-        $activator->activate('test@example.com', '123456');
+    #[Test]
+    public function activate_throws_when_the_license_does_not_cover_the_plugin_version(): void
+    {
+        App::plugin(
+            name: 'simple/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
+
+        $this->httpClient->method('request')->willReturn([
+            'packageName' => 'simple/package',
+            'licenseKey' => 'KT1-ABC123-DEF456',
+            'licenseCompatibility' => '^2.0.0', // Only supports 2.x.
+            'order' => [
+                'createdAt' => '2024-01-01T00:00:00Z'
+            ]
+        ]);
+
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('simple/package');
+        $activator = new LicenseActivator(
+            'simple/package',
+            $repository,
+            $validator,
+            $this->httpClient
+        );
+
+        $this->assertActivationFails(
+            ActivationOutcome::Incompatible,
+            fn () => $activator->activate('test@example.com', '123456')
+        );
+    }
+
+    public static function requestFailures(): array
+    {
+        return [
+            'a 401' => [new ActivationException(ActivationOutcome::InvalidCredentials), ActivationOutcome::InvalidCredentials],
+            'a 500' => [new ActivationException(ActivationOutcome::RequestFailed, ['status' => 500]), ActivationOutcome::RequestFailed]
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('requestFailures')]
+    public function activate_passes_on_the_outcome_of_a_rejected_request(ActivationException $failure, ActivationOutcome $outcome): void
+    {
+        $this->httpClient->method('request')->willThrowException($failure);
+
+        $activator = new LicenseActivator(
+            'test/package',
+            new LicenseRepository(),
+            new LicenseValidator('test/package'),
+            $this->httpClient
+        );
+
+        $e = $this->assertActivationFails(
+            $outcome,
+            fn () => $activator->activate('test@example.com', 'KT1-ABC123-DEF456')
+        );
+
+        $this->assertSame($failure, $e);
     }
 
     #[Test]
@@ -152,10 +230,10 @@ final class LicenseActivationTest extends LicenseTestCase
             $this->httpClient
         );
 
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('License key not valid for this plugin');
-
-        $activator->activate('test@example.com', '123456');
+        $this->assertActivationFails(
+            ActivationOutcome::WrongPlugin,
+            fn () => $activator->activate('test@example.com', '123456')
+        );
     }
 
     #[Test]
@@ -212,10 +290,10 @@ final class LicenseActivationTest extends LicenseTestCase
             'body' => ['licenseKey' => 'KT2-xxxxx-xxxxx']
         ]);
 
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Missing license activation parameters "email" or "licenseKey"');
-
-        $activator->activateFromRequest($request);
+        $this->assertActivationFails(
+            ActivationOutcome::MissingParameters,
+            fn () => $activator->activateFromRequest($request)
+        );
     }
 
     #[Test]
@@ -234,10 +312,10 @@ final class LicenseActivationTest extends LicenseTestCase
             'body' => ['email' => 'test@example.com']
         ]);
 
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Missing license activation parameters "email" or "licenseKey"');
-
-        $activator->activateFromRequest($request);
+        $this->assertActivationFails(
+            ActivationOutcome::MissingParameters,
+            fn () => $activator->activateFromRequest($request)
+        );
     }
 
     #[Test]
@@ -305,9 +383,9 @@ final class LicenseActivationTest extends LicenseTestCase
             $this->httpClient
         );
 
-        $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('License key already activated');
-
-        $activator->activate('test@example.com', '123456');
+        $this->assertActivationFails(
+            ActivationOutcome::AlreadyActivated,
+            fn () => $activator->activate('test@example.com', '123456')
+        );
     }
 }
