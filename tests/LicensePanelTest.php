@@ -77,7 +77,8 @@ final class LicensePanelTest extends LicenseTestCase
             'spanish without a country code' => ['es', 'Activar ahora'],
             'european spanish' => ['es_ES', 'Activar ahora'],
             'latin american spanish' => ['es_419', 'Activar ahora'],
-            'european portuguese' => ['pt_PT', 'Ativar agora']
+            'european portuguese' => ['pt_PT', 'Ativar agora'],
+            'brazilian portuguese' => ['pt_BR', 'Ativar agora']
         ];
     }
 
