@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace KirbyTools\Licensing;
 
 use Kirby\Exception\LogicException;
+use Throwable;
 
 /**
  * Carries the coded outcome of a failed activation. The message is for logs
@@ -18,11 +19,13 @@ final class ActivationException extends LogicException
 {
     public function __construct(
         public readonly ActivationOutcome $outcome,
-        array $details = []
+        array $details = [],
+        Throwable|null $previous = null
     ) {
         parent::__construct(
             message: 'License activation failed: ' . $outcome->value,
-            details: $details
+            details: $details,
+            previous: $previous
         );
     }
 }

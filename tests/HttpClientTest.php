@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Kirby\Exception\InvalidArgumentException;
 use KirbyTools\Licensing\ActivationException;
 use KirbyTools\Licensing\ActivationOutcome;
 use KirbyTools\Licensing\Http\KirbyHttpClient;
@@ -15,11 +16,18 @@ final class HttpClientTest extends LicenseTestCase
     private static mixed $server = null;
     private static string $baseUrl;
 
-    public static function setUpBeforeClass(): void
+    private static function freePort(): int
     {
         $socket = stream_socket_server('tcp://127.0.0.1:0');
         $port = (int)substr(strrchr(stream_socket_get_name($socket, false), ':'), 1);
         fclose($socket);
+
+        return $port;
+    }
+
+    public static function setUpBeforeClass(): void
+    {
+        $port = self::freePort();
 
         self::$baseUrl = "http://127.0.0.1:{$port}";
         self::$server = proc_open(
@@ -93,5 +101,40 @@ final class HttpClientTest extends LicenseTestCase
             ['packageName' => 'test/package', 'licenseCompatibility' => '^1.0.0'],
             (new KirbyHttpClient())->request(self::$baseUrl . '/status/200')
         );
+    }
+
+    #[Test]
+    public function request_reports_a_failed_request_without_a_status_when_the_server_cannot_be_reached(): void
+    {
+        // Nothing listens on a port that was free a moment ago.
+        $url = 'http://127.0.0.1:' . self::freePort() . '/status/200';
+
+        try {
+            (new KirbyHttpClient())->request($url);
+        } catch (ActivationException $e) {
+            $this->assertSame(ActivationOutcome::RequestFailed, $e->outcome);
+            $this->assertSame(['status' => null], $e->getDetails());
+            $this->assertSame(Exception::class, $e->getPrevious()::class);
+            return;
+        }
+
+        $this->fail('The request did not fail.');
+    }
+
+    #[Test]
+    public function request_lets_a_misconfigured_remote_through(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid "ca" option for the Remote class');
+
+        (new KirbyHttpClient())->request(self::$baseUrl . '/status/200', ['ca' => '/does/not/exist']);
+    }
+
+    #[Test]
+    public function request_lets_a_malformed_2xx_body_through(): void
+    {
+        $this->expectException(TypeError::class);
+
+        (new KirbyHttpClient())->request(self::$baseUrl . '/malformed');
     }
 }

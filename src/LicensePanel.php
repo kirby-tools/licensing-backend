@@ -8,7 +8,6 @@ use Closure;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Toolkit\I18n;
-use Kirby\Toolkit\Str;
 use Throwable;
 
 /**
@@ -223,7 +222,8 @@ final class LicensePanel
      *
      * `details` is not debug-gated, so it carries only the package and the
      * outcome, never the licensing API's response. A failure without an
-     * outcome, like a network error, keeps its own message.
+     * outcome, like a license file that cannot be written, is a bug and keeps
+     * its own message.
      */
     public static function activationFailure(Throwable $e, string $packageName): InvalidArgumentException
     {
@@ -235,16 +235,8 @@ final class LicensePanel
             );
         }
 
-        $data = match ($e->outcome) {
-            ActivationOutcome::RequestFailed => ['status' => $e->getDetails()['status'] ?? '–'],
-            default => []
-        };
-
         return new InvalidArgumentException(
-            message: Str::template(
-                self::resolveTranslation('kirby-tools.license.error.' . $e->outcome->value, $e->getMessage()),
-                $data
-            ),
+            message: self::resolveTranslation('kirby-tools.license.error.' . $e->outcome->value, $e->getMessage()),
             details: [
                 'package' => $packageName,
                 'outcome' => $e->outcome->value
@@ -328,7 +320,7 @@ final class LicensePanel
             'kirby-tools.license.error.incompatible' => 'Licencia no válida para esta versión del plugin',
             'kirby-tools.license.error.upgradeable' => 'Licencia no válida para esta versión del plugin. Por favor, actualiza tu licencia.',
             'kirby-tools.license.error.missingParameters' => 'Introduce tu correo electrónico y tu clave de licencia',
-            'kirby-tools.license.error.requestFailed' => 'El servidor de licencias no pudo procesar la solicitud (estado {status}). Inténtalo de nuevo más tarde.'
+            'kirby-tools.license.error.requestFailed' => 'No se pudo conectar con el servidor de licencias. Inténtalo de nuevo más tarde.'
         ];
 
         // Kirby ships `pt_BR` and `pt_PT`, which share the European Portuguese table.
@@ -368,7 +360,7 @@ final class LicensePanel
             'kirby-tools.license.error.incompatible' => 'Licença não válida para esta versão do plugin',
             'kirby-tools.license.error.upgradeable' => 'Licença não válida para esta versão do plugin. Por favor, atualize a sua licença.',
             'kirby-tools.license.error.missingParameters' => 'Introduza o seu endereço de e-mail e a chave de licença',
-            'kirby-tools.license.error.requestFailed' => 'O servidor de licenças não conseguiu processar o pedido (estado {status}). Tente novamente mais tarde.'
+            'kirby-tools.license.error.requestFailed' => 'Não foi possível contactar o servidor de licenças. Tente novamente mais tarde.'
         ];
 
         return [
@@ -408,7 +400,7 @@ final class LicensePanel
                 'kirby-tools.license.error.incompatible' => 'License not valid for this plugin version',
                 'kirby-tools.license.error.upgradeable' => 'License not valid for this plugin version. Please upgrade your license.',
                 'kirby-tools.license.error.missingParameters' => 'Please enter your email address and license key',
-                'kirby-tools.license.error.requestFailed' => 'The license server could not process the request (status {status}). Please try again later.'
+                'kirby-tools.license.error.requestFailed' => 'Could not reach the license server. Please try again later.'
             ],
             'de' => [
                 'kirby-tools.license.status.active' => 'Lizenziert',
@@ -446,7 +438,7 @@ final class LicensePanel
                 'kirby-tools.license.error.incompatible' => 'Lizenz ungültig für diese Plugin-Version',
                 'kirby-tools.license.error.upgradeable' => 'Lizenz ungültig für diese Plugin-Version. Bitte Lizenz upgraden.',
                 'kirby-tools.license.error.missingParameters' => 'Bitte gib deine E-Mail-Adresse und deinen Lizenzschlüssel ein',
-                'kirby-tools.license.error.requestFailed' => 'Der Lizenzserver konnte die Anfrage nicht verarbeiten (Status {status}). Bitte versuche es später erneut.'
+                'kirby-tools.license.error.requestFailed' => 'Der Lizenzserver konnte nicht erreicht werden. Bitte versuche es später erneut.'
             ],
             'fr' => [
                 'kirby-tools.license.status.active' => 'Sous licence',
@@ -484,7 +476,7 @@ final class LicensePanel
                 'kirby-tools.license.error.incompatible' => 'Licence invalide pour cette version du plugin',
                 'kirby-tools.license.error.upgradeable' => 'Licence invalide pour cette version du plugin. Veuillez mettre à niveau votre licence.',
                 'kirby-tools.license.error.missingParameters' => 'Veuillez saisir votre adresse e-mail et votre clé de licence',
-                'kirby-tools.license.error.requestFailed' => 'Le serveur de licences n\'a pas pu traiter la demande (statut {status}). Veuillez réessayer plus tard.'
+                'kirby-tools.license.error.requestFailed' => 'Impossible de joindre le serveur de licences. Veuillez essayer à nouveau plus tard.'
             ],
             'nl' => [
                 'kirby-tools.license.status.active' => 'Gelicentieerd',
@@ -522,7 +514,7 @@ final class LicensePanel
                 'kirby-tools.license.error.incompatible' => 'Licentie ongeldig voor deze pluginversie',
                 'kirby-tools.license.error.upgradeable' => 'Licentie ongeldig voor deze pluginversie. Upgrade je licentie.',
                 'kirby-tools.license.error.missingParameters' => 'Voer je e-mailadres en licentiesleutel in',
-                'kirby-tools.license.error.requestFailed' => 'De licentieserver kon het verzoek niet verwerken (status {status}). Probeer het later opnieuw.'
+                'kirby-tools.license.error.requestFailed' => 'Kan de licentieserver niet bereiken. Probeer het later opnieuw.'
             ],
             'it' => [
                 'kirby-tools.license.status.active' => 'Con licenza',
@@ -560,7 +552,7 @@ final class LicensePanel
                 'kirby-tools.license.error.incompatible' => 'Licenza non valida per questa versione del plugin',
                 'kirby-tools.license.error.upgradeable' => 'Licenza non valida per questa versione del plugin. Aggiorna la tua licenza.',
                 'kirby-tools.license.error.missingParameters' => 'Inserisci il tuo indirizzo email e la chiave di licenza',
-                'kirby-tools.license.error.requestFailed' => 'Il server delle licenze non ha potuto elaborare la richiesta (stato {status}). Riprova più tardi.'
+                'kirby-tools.license.error.requestFailed' => 'Impossibile raggiungere il server delle licenze. Riprova più tardi.'
             ],
             'pt_PT' => $portuguese,
             'pt_BR' => $portuguese,

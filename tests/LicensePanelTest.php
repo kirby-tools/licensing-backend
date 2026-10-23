@@ -275,18 +275,7 @@ final class LicensePanelTest extends LicenseTestCase
 
         $e = LicensePanel::activationFailure(new ActivationException($outcome, ['status' => 500]), self::PACKAGE_NAME);
 
-        $this->assertSame(str_replace('{status}', '500', $expected), $e->getMessage());
-    }
-
-    #[Test]
-    public function activation_failure_names_the_status_of_a_failed_request(): void
-    {
-        $e = LicensePanel::activationFailure(
-            new ActivationException(ActivationOutcome::RequestFailed, ['status' => 503]),
-            self::PACKAGE_NAME
-        );
-
-        $this->assertStringContainsString('503', $e->getMessage());
+        $this->assertSame($expected, $e->getMessage());
     }
 
     #[Test]
@@ -298,6 +287,40 @@ final class LicensePanelTest extends LicenseTestCase
         );
 
         $this->assertSame(['package' => self::PACKAGE_NAME, 'outcome' => 'requestFailed'], $e->getDetails());
+    }
+
+    #[Test]
+    public function activate_dialog_submit_keeps_the_message_when_the_license_file_cannot_be_written(): void
+    {
+        $packageName = 'johannschopplich/kirby-test-plugin';
+
+        $this->appWithActivationRequest('KT1-ABC123-DEF456');
+        App::plugin(name: 'johannschopplich/test-plugin', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
+
+        $httpClient = $this->createStub(HttpClientInterface::class);
+        $httpClient->method('request')->willReturn([
+            'packageName' => $packageName,
+            'licenseKey' => 'KT1-ABC123-DEF456',
+            'licenseCompatibility' => '^1.0.0',
+            'order' => ['createdAt' => '2024-01-01T00:00:00Z']
+        ]);
+
+        $submit = LicensePanel::dialogs($packageName, 'Test Plugin', ['httpClient' => $httpClient])['johannschopplich-kirby-test-plugin/activate']['submit'];
+
+        // A read-only license file makes the write fail.
+        file_put_contents(self::LICENSE_FILE_PATH, '{}');
+        chmod(self::LICENSE_FILE_PATH, 0444);
+
+        try {
+            $submit->call(new Route('', 'POST', $submit));
+            $this->fail('The submit did not report the failure.');
+        } catch (InvalidArgumentException $e) {
+            $this->assertNotInstanceOf(ActivationException::class, $e->getPrevious());
+            $this->assertStringContainsString('is not writable', $e->getMessage());
+            $this->assertSame(['package' => $packageName], $e->getDetails());
+        } finally {
+            chmod(self::LICENSE_FILE_PATH, 0644);
+        }
     }
 
     #[Test]
