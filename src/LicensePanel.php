@@ -333,9 +333,9 @@ final class LicensePanel
 
             'kirby-tools.license.activate.info' => 'Introduza os dados da sua licença para ativar o plugin.',
             'kirby-tools.license.activate.unreadable' => 'O ficheiro de licença existe mas não foi possível lê-lo. Uma nova ativação substitui-o, incluindo quaisquer licenças de outros plugins que contenha.',
-            'kirby-tools.license.activate.email' => 'E-mail',
+            'kirby-tools.license.activate.email' => 'Email',
             'kirby-tools.license.activate.licenseKey' => 'Chave de licença',
-            'kirby-tools.license.activate.licenseKey.help' => 'Encontre a sua chave de licença no e-mail de confirmação da encomenda ou em <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
+            'kirby-tools.license.activate.licenseKey.help' => 'Encontre a sua chave de licença no email de confirmação da encomenda ou em <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
             'kirby-tools.license.activate.submit' => 'Ativar licença',
             'kirby-tools.license.activate.success' => 'Plugin ativado!',
 
@@ -354,12 +354,12 @@ final class LicensePanel
             'kirby-tools.license.button.buy' => 'Compre uma licença',
             'kirby-tools.license.button.upgrade' => 'Atualizar',
 
-            'kirby-tools.license.error.invalidCredentials' => 'Endereço de e-mail ou chave de licença incorretos',
+            'kirby-tools.license.error.invalidCredentials' => 'Endereço de email ou chave de licença incorretos',
             'kirby-tools.license.error.alreadyActivated' => 'Licença já ativada',
             'kirby-tools.license.error.invalid' => 'Licença não válida para este plugin',
             'kirby-tools.license.error.incompatible' => 'Licença não válida para esta versão do plugin',
             'kirby-tools.license.error.upgradeable' => 'Licença não válida para esta versão do plugin. Por favor, atualize a sua licença.',
-            'kirby-tools.license.error.missingParameters' => 'Introduza o seu endereço de e-mail e a chave de licença',
+            'kirby-tools.license.error.missingParameters' => 'Introduza o seu endereço de email e a chave de licença',
             'kirby-tools.license.error.requestFailed' => 'Não foi possível contactar o servidor de licenças. Tente novamente mais tarde.'
         ];
 
@@ -449,9 +449,9 @@ final class LicensePanel
 
                 'kirby-tools.license.activate.info' => 'Entrez vos informations de licence pour activer le plugin.',
                 'kirby-tools.license.activate.unreadable' => 'Le fichier de licence existe mais n\'a pas pu être lu. Une nouvelle activation le remplace, y compris les licences d\'autres plugins qu\'il contient.',
-                'kirby-tools.license.activate.email' => 'E-mail',
+                'kirby-tools.license.activate.email' => 'Courriel',
                 'kirby-tools.license.activate.licenseKey' => 'Clé de licence',
-                'kirby-tools.license.activate.licenseKey.help' => 'Retrouvez votre clé de licence dans votre e-mail de confirmation de commande ou sur <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
+                'kirby-tools.license.activate.licenseKey.help' => 'Retrouvez votre clé de licence dans votre courriel de confirmation de commande ou sur <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
                 'kirby-tools.license.activate.submit' => 'Activer la licence',
                 'kirby-tools.license.activate.success' => 'Plugin activé !',
 
@@ -470,12 +470,12 @@ final class LicensePanel
                 'kirby-tools.license.button.buy' => 'Acheter une licence',
                 'kirby-tools.license.button.upgrade' => 'Mettre à niveau',
 
-                'kirby-tools.license.error.invalidCredentials' => 'Adresse e-mail ou clé de licence incorrecte',
+                'kirby-tools.license.error.invalidCredentials' => 'Adresse de courriel ou clé de licence incorrecte',
                 'kirby-tools.license.error.alreadyActivated' => 'Licence déjà activée',
                 'kirby-tools.license.error.invalid' => 'Licence invalide pour ce plugin',
                 'kirby-tools.license.error.incompatible' => 'Licence invalide pour cette version du plugin',
                 'kirby-tools.license.error.upgradeable' => 'Licence invalide pour cette version du plugin. Veuillez mettre à niveau votre licence.',
-                'kirby-tools.license.error.missingParameters' => 'Veuillez saisir votre adresse e-mail et votre clé de licence',
+                'kirby-tools.license.error.missingParameters' => 'Veuillez saisir votre courriel et votre clé de licence',
                 'kirby-tools.license.error.requestFailed' => 'Impossible de joindre le serveur de licences. Veuillez essayer à nouveau plus tard.'
             ],
             'nl' => [
@@ -527,7 +527,7 @@ final class LicensePanel
                 'kirby-tools.license.activate.unreadable' => 'Il file di licenza esiste ma non è stato possibile leggerlo. Una nuova attivazione lo sostituisce, incluse le licenze di altri plugin che contiene.',
                 'kirby-tools.license.activate.email' => 'Email',
                 'kirby-tools.license.activate.licenseKey' => 'Chiave di licenza',
-                'kirby-tools.license.activate.licenseKey.help' => 'Trova la tua chiave di licenza nell\'e-mail di conferma dell\'ordine o su <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
+                'kirby-tools.license.activate.licenseKey.help' => 'Trova la tua chiave di licenza nell\'email di conferma dell\'ordine o su <a href="https://hub.kirby.tools" target="_blank">hub.kirby.tools</a>.',
                 'kirby-tools.license.activate.submit' => 'Attiva licenza',
                 'kirby-tools.license.activate.success' => 'Plugin attivato!',
 
