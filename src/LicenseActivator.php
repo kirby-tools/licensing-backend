@@ -2,13 +2,13 @@
 
 declare(strict_types = 1);
 
-namespace JohannSchopplich\Licensing;
+namespace KirbyTools\Licensing;
 
-use JohannSchopplich\Licensing\Http\HttpClientInterface;
-use JohannSchopplich\Licensing\Http\KirbyHttpClient;
 use Kirby\Cms\App;
 use Kirby\Exception\LogicException;
 use Kirby\Http\Request;
+use KirbyTools\Licensing\Http\HttpClientInterface;
+use KirbyTools\Licensing\Http\KirbyHttpClient;
 use Throwable;
 
 /**

@@ -2,10 +2,10 @@
 
 declare(strict_types = 1);
 
-use JohannSchopplich\Licensing\Http\HttpClientInterface;
-use JohannSchopplich\Licensing\Licenses;
 use Kirby\Cms\App;
 use Kirby\Exception\LogicException;
+use KirbyTools\Licensing\Http\HttpClientInterface;
+use KirbyTools\Licensing\Licenses;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;

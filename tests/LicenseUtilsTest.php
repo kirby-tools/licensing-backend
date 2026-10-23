@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-use JohannSchopplich\Licensing\LicenseUtils;
+use KirbyTools\Licensing\LicenseUtils;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

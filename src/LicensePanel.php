@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace JohannSchopplich\Licensing;
+namespace KirbyTools\Licensing;
 
 use Closure;
 use Kirby\Cms\App;

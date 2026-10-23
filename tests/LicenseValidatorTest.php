@@ -2,8 +2,8 @@
 
 declare(strict_types = 1);
 
-use JohannSchopplich\Licensing\LicenseValidator;
 use Kirby\Cms\App;
+use KirbyTools\Licensing\LicenseValidator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 

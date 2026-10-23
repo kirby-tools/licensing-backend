@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace JohannSchopplich\Licensing;
+namespace KirbyTools\Licensing;
 
 use Kirby\Plugin\License as KirbyLicense;
 use Kirby\Plugin\LicenseStatus as KirbyLicenseStatus;

@@ -2,11 +2,11 @@
 
 declare(strict_types = 1);
 
-use JohannSchopplich\Licensing\LicensePanel;
-use JohannSchopplich\Licensing\PluginLicense;
 use Kirby\Cms\App;
 use Kirby\Plugin\Plugin;
 use Kirby\Toolkit\I18n;
+use KirbyTools\Licensing\LicensePanel;
+use KirbyTools\Licensing\PluginLicense;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 

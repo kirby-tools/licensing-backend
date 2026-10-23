@@ -2,8 +2,8 @@
 
 declare(strict_types = 1);
 
-use JohannSchopplich\Licensing\LicenseRepository;
 use Kirby\Cms\App;
+use KirbyTools\Licensing\LicenseRepository;
 use PHPUnit\Framework\TestCase;
 
 abstract class LicenseTestCase extends TestCase

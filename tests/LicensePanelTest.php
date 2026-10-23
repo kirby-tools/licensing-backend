@@ -2,14 +2,14 @@
 
 declare(strict_types = 1);
 
-use JohannSchopplich\Licensing\LicensePanel;
-use JohannSchopplich\Licensing\LicenseStatus;
 use Kirby\Cms\Api;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Exception\LogicException;
 use Kirby\Http\Route;
 use Kirby\Toolkit\I18n;
+use KirbyTools\Licensing\LicensePanel;
+use KirbyTools\Licensing\LicenseStatus;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;

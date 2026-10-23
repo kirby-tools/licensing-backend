@@ -2,14 +2,14 @@
 
 declare(strict_types = 1);
 
-use JohannSchopplich\Licensing\Http\HttpClientInterface;
-use JohannSchopplich\Licensing\LicenseActivator;
-use JohannSchopplich\Licensing\LicenseRepository;
-use JohannSchopplich\Licensing\Licenses;
-use JohannSchopplich\Licensing\LicenseValidator;
 use Kirby\Cms\App;
 use Kirby\Exception\LogicException;
 use Kirby\Http\Request;
+use KirbyTools\Licensing\Http\HttpClientInterface;
+use KirbyTools\Licensing\LicenseActivator;
+use KirbyTools\Licensing\LicenseRepository;
+use KirbyTools\Licensing\Licenses;
+use KirbyTools\Licensing\LicenseValidator;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\Stub;

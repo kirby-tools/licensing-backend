@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace JohannSchopplich\Licensing\Http;
+namespace KirbyTools\Licensing\Http;
 
 interface HttpClientInterface
 {
