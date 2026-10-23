@@ -94,6 +94,14 @@ final class LicensePanelTest extends LicenseTestCase
         return $cases;
     }
 
+    public static function locales(): array
+    {
+        return array_map(fn (string $locale): array => [$locale], array_combine(
+            array_keys(LicensePanel::translations()),
+            array_keys(LicensePanel::translations())
+        ));
+    }
+
     #[Test]
     #[DataProvider('activationHandlers')]
     public function activation_handler_throws_an_invalid_argument_exception_when_kirby_rebinds_the_scope(Closure $handler, Closure $scope): void
@@ -341,5 +349,14 @@ final class LicensePanelTest extends LicenseTestCase
         I18n::$translations = ['de' => ['error.page.undefined' => 'Die Seite kann nicht gefunden werden']];
 
         $this->assertSame('Plugin aktiviert!', LicensePanel::activationSuccess(self::PACKAGE_NAME)['message']);
+    }
+
+    #[Test]
+    #[DataProvider('locales')]
+    public function translations_cover_every_english_key_in_every_locale(string $locale): void
+    {
+        $translations = LicensePanel::translations();
+
+        $this->assertSame(array_keys($translations['en']), array_keys($translations[$locale]));
     }
 }
