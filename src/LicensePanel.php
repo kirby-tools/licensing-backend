@@ -7,6 +7,7 @@ namespace KirbyTools\Licensing;
 use Closure;
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
+use Kirby\Toolkit\HtmlString;
 use Kirby\Toolkit\I18n;
 use Throwable;
 
@@ -157,7 +158,7 @@ final class LicensePanel
                                     'label' => I18n::translate('kirby-tools.license.activate.licenseKey'),
                                     'type' => 'text',
                                     'required' => true,
-                                    'help' => I18n::translate('kirby-tools.license.activate.licenseKey.help')
+                                    'help' => new HtmlString(I18n::translate('kirby-tools.license.activate.licenseKey.help') ?? '')
                                 ]
                             ],
                             'submitButton' => [

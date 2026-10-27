@@ -5,6 +5,7 @@ declare(strict_types = 1);
 use Kirby\Cms\App;
 use Kirby\Exception\InvalidArgumentException;
 use Kirby\Http\Route;
+use Kirby\Toolkit\HtmlString;
 use Kirby\Toolkit\I18n;
 use KirbyTools\Licensing\ActivationException;
 use KirbyTools\Licensing\ActivationOutcome;
@@ -101,6 +102,19 @@ final class LicensePanelTest extends LicenseTestCase
             array_keys(LicensePanel::translations()),
             array_keys(LicensePanel::translations())
         ));
+    }
+
+    #[Test]
+    public function activate_dialog_gives_sv_SE_the_english_license_key_help_as_an_html_string(): void
+    {
+        I18n::$locale = fn (): string => 'sv_SE';
+
+        $load = LicensePanel::dialogs(self::PACKAGE_NAME, 'Test Plugin')['johannschopplich-test-plugin/activate']['load'];
+
+        $help = $load->call(new Route('', 'GET', $load))['props']['fields']['licenseKey']['help'];
+
+        $this->assertInstanceOf(HtmlString::class, $help);
+        $this->assertStringStartsWith('Find your license key', $help->value());
     }
 
     #[Test]
