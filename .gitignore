@@ -12,7 +12,7 @@
 /.cache
 /.php-cs-fixer.cache
 /.phpunit.*
-/index.dev.mjs
+/index.dev.*
 /phpunit.xml
 /tests/coverage
 /tests/*/tmp
