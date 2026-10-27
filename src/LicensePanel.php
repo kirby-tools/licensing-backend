@@ -11,9 +11,7 @@ use Kirby\Toolkit\I18n;
 use Throwable;
 
 /**
- * Every Kirby Tools plugin registers these extensions verbatim, so the license
- * dialog ID built here must stay in sync with the one `PluginLicense::toKirbyStatus`
- * emits; both take the activation dialog ID from `LicenseUtils::toActivationDialog`.
+ * Panel dialogs and translations every Kirby Tools plugin registers as is.
  *
  * @link      https://kirby.tools
  * @copyright Johann Schopplich
@@ -197,10 +195,8 @@ final class LicensePanel
     }
 
     /**
-     * Builds the Panel actions for a successful activation: a toast, a shared
-     * event plus one named after the plugin, and a reload of the current view,
-     * which hands every field a fresh `licenseStatus`. The event payload is
-     * this array, so listeners read `package` and `status` from it.
+     * Builds the Panel actions for a successful activation. The reload hands
+     * every field a fresh `licenseStatus`; event listeners receive this array.
      */
     public static function activationSuccess(string $packageName): array
     {

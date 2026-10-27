@@ -157,7 +157,7 @@ final class LicenseActivationTest extends LicenseTestCase
         $this->httpClient->method('request')->willReturn([
             'packageName' => 'simple/package',
             'licenseKey' => 'KT1-ABC123-DEF456',
-            'licenseCompatibility' => '^2.0.0', // Only supports 2.x.
+            'licenseCompatibility' => '^2.0.0',
             'order' => [
                 'createdAt' => '2024-01-01T00:00:00Z'
             ]
