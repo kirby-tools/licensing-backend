@@ -9,6 +9,7 @@ use Kirby\Http\Request;
 use KirbyTools\Licensing\Http\HttpClientInterface;
 use KirbyTools\Licensing\Http\KirbyHttpClient;
 use Throwable;
+use WeakMap;
 
 /**
  * @link      https://kirby.tools
@@ -18,6 +19,9 @@ use Throwable;
 final class LicenseActivator
 {
     private const API_URL = 'https://repo.kirby.tools/api';
+
+    /** @var WeakMap<App, array<string, true>>|null */
+    private static WeakMap|null $refreshAttempts = null;
 
     private readonly HttpClientInterface $httpClient;
 
@@ -85,25 +89,32 @@ final class LicenseActivator
     }
 
     /**
-     * Refetches the license data when the installed plugin version differs from
-     * the one it was last stored for.
+     * Refetches the license data, at most once per request, when the installed
+     * plugin version differs from the one it was last stored for.
      */
     public function refresh(): void
     {
+        $kirby = App::instance();
+        self::$refreshAttempts ??= new WeakMap();
+        $attempts = self::$refreshAttempts[$kirby] ?? [];
+
         $licenseKey = $this->repository->getLicenseKey($this->packageName);
         $storedVersion = $this->repository->getPluginVersion($this->packageName);
         $currentVersion = $this->validator->getPluginVersion();
 
         if (
+            !isset($attempts[$this->packageName]) &&
             $this->validator->isValid($licenseKey) &&
             $currentVersion !== $storedVersion
         ) {
+            self::$refreshAttempts[$kirby] = [...$attempts, $this->packageName => true];
+
             try {
                 $response = $this->request('licenses/' . $licenseKey . '/package');
             } catch (Throwable $e) {
                 // The licensing API answers 401 for a license key it does not
                 // know. Any other failure keeps the stored license, so the next
-                // read refreshes again.
+                // request refreshes again.
                 if ($e instanceof ActivationException && $e->outcome === ActivationOutcome::InvalidCredentials) {
                     $this->repository->remove($this->packageName);
                 }

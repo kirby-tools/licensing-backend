@@ -97,7 +97,7 @@ final class LicensesTest extends LicenseTestCase
     }
 
     #[Test]
-    public function read_retries_the_refresh_after_a_failure(): void
+    public function read_retries_a_failed_refresh_in_the_next_request_only(): void
     {
         App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.1.0'], version: '1.1.0');
 
@@ -112,6 +112,10 @@ final class LicensesTest extends LicenseTestCase
             ->willThrowException(new Exception('Could not resolve host: repo.kirby.tools', 6));
 
         Licenses::read('test/licensed', ['httpClient' => $httpClient]);
+        Licenses::read('test/licensed', ['httpClient' => $httpClient]);
+
+        $this->appWithLicenseRoots();
+
         Licenses::read('test/licensed', ['httpClient' => $httpClient]);
     }
 
