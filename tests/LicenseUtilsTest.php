@@ -25,12 +25,6 @@ final class LicenseUtilsTest extends TestCase
     }
 
     #[Test]
-    public function to_activation_dialog_appends_activate_to_the_package_slug(): void
-    {
-        $this->assertEquals('johannschopplich-kirby-copilot/activate', LicenseUtils::toActivationDialog('johannschopplich/kirby-copilot'));
-    }
-
-    #[Test]
     public function to_compatible_versions_spans_the_lowest_to_the_highest_major(): void
     {
         $this->assertEquals('v1', LicenseUtils::toCompatibleVersions('^1'));

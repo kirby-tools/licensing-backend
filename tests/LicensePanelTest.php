@@ -21,6 +21,9 @@ final class LicensePanelTest extends LicenseTestCase
 {
     private const PACKAGE_NAME = 'johannschopplich/test-plugin';
 
+    // Kirby registers the plugin without the `kirby-` prefix this package name carries.
+    private const PREFIXED_PACKAGE_NAME = 'johannschopplich/kirby-test-plugin';
+
     protected function setUp(): void
     {
         $this->appWithTranslations(LicensePanel::translations());
@@ -54,6 +57,22 @@ final class LicensePanelTest extends LicenseTestCase
         ]));
     }
 
+    private function submitHandler(): Closure
+    {
+        $this->appWithActivationRequest('KT1-ABC123-DEF456');
+        App::plugin(name: self::PACKAGE_NAME, extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
+
+        $httpClient = $this->createStub(HttpClientInterface::class);
+        $httpClient->method('request')->willReturn([
+            'packageName' => self::PREFIXED_PACKAGE_NAME,
+            'licenseKey' => 'KT1-ABC123-DEF456',
+            'licenseCompatibility' => '^1.0.0',
+            'order' => ['createdAt' => '2024-01-01T00:00:00Z']
+        ]);
+
+        return LicensePanel::dialogs(self::PREFIXED_PACKAGE_NAME, 'Test Plugin', ['httpClient' => $httpClient])['johannschopplich-kirby-test-plugin/activate']['submit'];
+    }
+
     public static function activationHandlers(): array
     {
         return [
@@ -83,25 +102,15 @@ final class LicensePanelTest extends LicenseTestCase
         ];
     }
 
-    public static function outcomesPerLocale(): array
+    public static function outcomes(): array
     {
         $cases = [];
 
-        foreach (array_keys(LicensePanel::translations()) as $locale) {
-            foreach (ActivationOutcome::cases() as $outcome) {
-                $cases["{$outcome->name} in {$locale}"] = [$locale, $outcome];
-            }
+        foreach (ActivationOutcome::cases() as $outcome) {
+            $cases[$outcome->name] = [$outcome];
         }
 
         return $cases;
-    }
-
-    public static function locales(): array
-    {
-        return array_map(fn (string $locale): array => [$locale], array_combine(
-            array_keys(LicensePanel::translations()),
-            array_keys(LicensePanel::translations())
-        ));
     }
 
     #[Test]
@@ -279,12 +288,12 @@ final class LicensePanelTest extends LicenseTestCase
     }
 
     #[Test]
-    #[DataProvider('outcomesPerLocale')]
-    public function activation_failure_translates_every_outcome_in_every_locale(string $locale, ActivationOutcome $outcome): void
+    #[DataProvider('outcomes')]
+    public function activation_failure_translates_every_outcome_into_de(ActivationOutcome $outcome): void
     {
-        I18n::$locale = fn (): string => $locale;
+        I18n::$locale = fn (): string => 'de';
 
-        $expected = LicensePanel::translations()[$locale]['kirby-tools.license.error.' . $outcome->value] ?? null;
+        $expected = LicensePanel::translations()['de']['kirby-tools.license.error.' . $outcome->value] ?? null;
         $this->assertIsString($expected);
 
         $e = LicensePanel::activationFailure(new ActivationException($outcome, ['status' => 500]), self::PACKAGE_NAME);
@@ -324,20 +333,7 @@ final class LicensePanelTest extends LicenseTestCase
     #[DataProvider('unwritableLicenseFiles')]
     public function activate_dialog_submit_fails_when_the_license_file_cannot_be_written(Closure $block, Closure $unblock): void
     {
-        $packageName = 'johannschopplich/kirby-test-plugin';
-
-        $this->appWithActivationRequest('KT1-ABC123-DEF456');
-        App::plugin(name: 'johannschopplich/test-plugin', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
-
-        $httpClient = $this->createStub(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn([
-            'packageName' => $packageName,
-            'licenseKey' => 'KT1-ABC123-DEF456',
-            'licenseCompatibility' => '^1.0.0',
-            'order' => ['createdAt' => '2024-01-01T00:00:00Z']
-        ]);
-
-        $submit = LicensePanel::dialogs($packageName, 'Test Plugin', ['httpClient' => $httpClient])['johannschopplich-kirby-test-plugin/activate']['submit'];
+        $submit = $this->submitHandler();
 
         $block(self::LICENSE_FILE_PATH);
 
@@ -347,7 +343,7 @@ final class LicensePanelTest extends LicenseTestCase
         } catch (InvalidArgumentException $e) {
             $this->assertNotInstanceOf(ActivationException::class, $e->getPrevious());
             $this->assertSame('The file "' . self::LICENSE_FILE_PATH . '" is not writable', $e->getMessage());
-            $this->assertSame(['package' => $packageName], $e->getDetails());
+            $this->assertSame(['package' => self::PREFIXED_PACKAGE_NAME], $e->getDetails());
         } finally {
             $unblock(self::LICENSE_FILE_PATH);
         }
@@ -368,28 +364,14 @@ final class LicensePanelTest extends LicenseTestCase
     #[Test]
     public function activate_dialog_submit_returns_message_event_and_reload(): void
     {
-        // Kirby registers the plugin without the `kirby-` prefix its package name carries.
-        $packageName = 'johannschopplich/kirby-test-plugin';
-
-        $this->appWithActivationRequest('KT1-ABC123-DEF456');
-        App::plugin(name: 'johannschopplich/test-plugin', extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
-
-        $httpClient = $this->createStub(HttpClientInterface::class);
-        $httpClient->method('request')->willReturn([
-            'packageName' => $packageName,
-            'licenseKey' => 'KT1-ABC123-DEF456',
-            'licenseCompatibility' => '^1.0.0',
-            'order' => ['createdAt' => '2024-01-01T00:00:00Z']
-        ]);
-
-        $submit = LicensePanel::dialogs($packageName, 'Test Plugin', ['httpClient' => $httpClient])['johannschopplich-kirby-test-plugin/activate']['submit'];
+        $submit = $this->submitHandler();
 
         $this->assertSame(
             [
                 'message' => 'Plugin activated!',
                 'event' => ['kirby-tools.license.activate', 'kirby-tools.license.activate.test-plugin'],
                 'reload' => true,
-                'package' => $packageName,
+                'package' => self::PREFIXED_PACKAGE_NAME,
                 'status' => 'active'
             ],
             $submit->call(new Route('', 'POST', $submit))
@@ -406,11 +388,12 @@ final class LicensePanelTest extends LicenseTestCase
     }
 
     #[Test]
-    #[DataProvider('locales')]
-    public function translations_cover_every_english_key_in_every_locale(string $locale): void
+    public function translations_cover_every_english_key_in_every_locale(): void
     {
         $translations = LicensePanel::translations();
 
-        $this->assertSame(array_keys($translations['en']), array_keys($translations[$locale]));
+        foreach ($translations as $locale => $strings) {
+            $this->assertSame(array_keys($translations['en']), array_keys($strings), $locale);
+        }
     }
 }

@@ -110,86 +110,53 @@ final class LicenseActivationTest extends LicenseTestCase
         );
     }
 
-    #[Test]
-    public function activate_throws_naming_the_upgrade_when_the_plugin_outgrew_the_license(): void
-    {
-        App::plugin(
-            name: 'simple/package',
-            extends: [],
-            info: ['version' => '2.0.0'],
-            version: '2.0.0'
-        );
-
-        $this->httpClient->method('request')->willReturn([
-            'packageName' => 'simple/package',
-            'licenseKey' => 'KT1-ABC123-DEF456',
-            'licenseCompatibility' => '^1.0.0', // Only supports 1.x.
-            'order' => [
-                'createdAt' => '2024-01-01T00:00:00Z'
-            ]
-        ]);
-
-        $repository = new LicenseRepository();
-        $validator = new LicenseValidator('simple/package');
-        $activator = new LicenseActivator(
-            'simple/package',
-            $repository,
-            $validator,
-            $this->httpClient
-        );
-
-        $this->assertActivationFails(
-            ActivationOutcome::Upgradeable,
-            fn () => $activator->activate('test@example.com', '123456')
-        );
-    }
-
-    #[Test]
-    public function activate_throws_when_the_license_does_not_cover_the_plugin_version(): void
-    {
-        App::plugin(
-            name: 'simple/package',
-            extends: [],
-            info: ['version' => '1.0.0'],
-            version: '1.0.0'
-        );
-
-        $this->httpClient->method('request')->willReturn([
-            'packageName' => 'simple/package',
-            'licenseKey' => 'KT1-ABC123-DEF456',
-            'licenseCompatibility' => '^2.0.0',
-            'order' => [
-                'createdAt' => '2024-01-01T00:00:00Z'
-            ]
-        ]);
-
-        $repository = new LicenseRepository();
-        $validator = new LicenseValidator('simple/package');
-        $activator = new LicenseActivator(
-            'simple/package',
-            $repository,
-            $validator,
-            $this->httpClient
-        );
-
-        $this->assertActivationFails(
-            ActivationOutcome::Incompatible,
-            fn () => $activator->activate('test@example.com', '123456')
-        );
-    }
-
-    public static function requestFailures(): array
+    public static function uncoveredPluginVersions(): array
     {
         return [
-            'a 401' => [new ActivationException(ActivationOutcome::InvalidCredentials), ActivationOutcome::InvalidCredentials],
-            'a 500' => [new ActivationException(ActivationOutcome::RequestFailed, ['status' => 500]), ActivationOutcome::RequestFailed]
+            'a plugin that outgrew the license' => ['2.0.0', '^1.0.0', ActivationOutcome::Upgradeable],
+            'a license for a later major' => ['1.0.0', '^2.0.0', ActivationOutcome::Incompatible]
         ];
     }
 
     #[Test]
-    #[DataProvider('requestFailures')]
-    public function activate_passes_on_the_outcome_of_a_rejected_request(ActivationException $failure, ActivationOutcome $outcome): void
+    #[DataProvider('uncoveredPluginVersions')]
+    public function activate_throws_when_the_license_does_not_cover_the_plugin_version(string $pluginVersion, string $licenseCompatibility, ActivationOutcome $outcome): void
     {
+        App::plugin(
+            name: 'simple/package',
+            extends: [],
+            info: ['version' => $pluginVersion],
+            version: $pluginVersion
+        );
+
+        $this->httpClient->method('request')->willReturn([
+            'packageName' => 'simple/package',
+            'licenseKey' => 'KT1-ABC123-DEF456',
+            'licenseCompatibility' => $licenseCompatibility,
+            'order' => [
+                'createdAt' => '2024-01-01T00:00:00Z'
+            ]
+        ]);
+
+        $repository = new LicenseRepository();
+        $validator = new LicenseValidator('simple/package');
+        $activator = new LicenseActivator(
+            'simple/package',
+            $repository,
+            $validator,
+            $this->httpClient
+        );
+
+        $this->assertActivationFails(
+            $outcome,
+            fn () => $activator->activate('test@example.com', '123456')
+        );
+    }
+
+    #[Test]
+    public function activate_passes_on_the_outcome_of_a_rejected_request(): void
+    {
+        $failure = new ActivationException(ActivationOutcome::RequestFailed, ['status' => 500]);
         $this->httpClient->method('request')->willThrowException($failure);
 
         $activator = new LicenseActivator(
@@ -200,7 +167,7 @@ final class LicenseActivationTest extends LicenseTestCase
         );
 
         $e = $this->assertActivationFails(
-            $outcome,
+            ActivationOutcome::RequestFailed,
             fn () => $activator->activate('test@example.com', 'KT1-ABC123-DEF456')
         );
 

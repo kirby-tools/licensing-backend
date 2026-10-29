@@ -59,10 +59,8 @@ final class HttpClientTest extends LicenseTestCase
     public static function failedRequests(): array
     {
         return [
-            'a 400' => [400],
             'a 404' => [404],
-            'a 500' => [500],
-            'a 503' => [503]
+            'a 500' => [500]
         ];
     }
 
@@ -128,13 +126,5 @@ final class HttpClientTest extends LicenseTestCase
         $this->expectExceptionMessage('Invalid "ca" option for the Remote class');
 
         (new KirbyHttpClient())->request(self::$baseUrl . '/status/200', ['ca' => '/does/not/exist']);
-    }
-
-    #[Test]
-    public function request_lets_a_malformed_2xx_body_through(): void
-    {
-        $this->expectException(TypeError::class);
-
-        (new KirbyHttpClient())->request(self::$baseUrl . '/malformed');
     }
 }

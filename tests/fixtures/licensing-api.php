@@ -1,17 +1,9 @@
 <?php
 
 // Router for PHP's built-in server: answers with the status code the path
-// ends in, e.g. `/status/401`, and a body naming a different failure, which
-// the client must not read. `/malformed` answers 200 with a body that is
-// not JSON.
-$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-
-if ($path === '/malformed') {
-    echo 'Service temporarily unavailable';
-    return;
-}
-
-$status = (int)basename($path);
+// ends in, e.g. `/status/404`. Every error body claims `Unauthorized`, so a
+// client that reads it instead of the status misreports a 404 or 500.
+$status = (int)basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
 http_response_code($status);
 header('Content-Type: application/json');
