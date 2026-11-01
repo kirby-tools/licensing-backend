@@ -68,6 +68,35 @@ final class LicensesTest extends LicenseTestCase
         );
     }
 
+    #[Test]
+    public function read_posts_the_license_key_to_plugin_refresh(): void
+    {
+        App::plugin(name: 'test/licensed', extends: [], info: ['version' => '1.1.0'], version: '1.1.0');
+
+        file_put_contents(self::LICENSE_FILE_PATH, json_encode([
+            'test/licensed' => self::LICENSE_STORED_FOR_PLUGIN_1_0_0
+        ]));
+
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient
+            ->expects($this->once())
+            ->method('request')
+            ->with(
+                'https://repo.kirby.tools/api/plugin/refresh',
+                $this->callback(fn (array $options) => $options['method'] === 'POST' && $options['data'] === [
+                    'licenseKey' => 'KT1-ABC123-DEF456'
+                ])
+            )
+            ->willReturn([
+                'packageName' => 'test/licensed',
+                'licenseKey' => 'KT1-ABC123-DEF456',
+                'licenseCompatibility' => '^1.0.0',
+                'order' => ['createdAt' => '2024-01-01T00:00:00Z']
+            ]);
+
+        Licenses::read('test/licensed', ['httpClient' => $httpClient]);
+    }
+
     public static function refreshFailuresOtherThan401(): array
     {
         return [

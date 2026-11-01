@@ -52,14 +52,25 @@ final class LicenseActivationTest extends LicenseTestCase
             version: '1.0.0'
         );
 
-        $this->httpClient->method('request')->willReturn([
-            'packageName' => 'simple/package',
-            'licenseKey' => 'KT1-ABC123-DEF456',
-            'licenseCompatibility' => '^1.0.0',
-            'order' => [
-                'createdAt' => '2024-01-01T00:00:00Z'
-            ]
-        ]);
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient
+            ->expects($this->once())
+            ->method('request')
+            ->with(
+                'https://repo.kirby.tools/api/plugin/activate',
+                $this->callback(fn (array $options) => $options['method'] === 'POST' && $options['data'] === [
+                    'email' => 'test@example.com',
+                    'licenseKey' => 'KT1-ABC123-DEF456'
+                ])
+            )
+            ->willReturn([
+                'packageName' => 'simple/package',
+                'licenseKey' => 'KT1-ABC123-DEF456',
+                'licenseCompatibility' => '^1.0.0',
+                'order' => [
+                    'createdAt' => '2024-01-01T00:00:00Z'
+                ]
+            ]);
 
         $repository = new LicenseRepository();
         $validator = new LicenseValidator('simple/package');
@@ -67,10 +78,10 @@ final class LicenseActivationTest extends LicenseTestCase
             'simple/package',
             $repository,
             $validator,
-            $this->httpClient
+            $httpClient
         );
 
-        $activator->activate('test@example.com', '123456');
+        $activator->activate('test@example.com', 'KT1-ABC123-DEF456');
 
         $licenses = Licenses::read('simple/package');
         $this->assertEquals('active', $licenses->getStatus());
