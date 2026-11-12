@@ -96,6 +96,13 @@ Kirby integration adapter that:
 - Provides standardized license display in the Kirby Panel
 - Integrates with Kirby's plugin management interface
 
+## Used By
+
+- [kirby-copilot](https://kirby.tools/copilot)
+- [kirby-content-translator](https://kirby.tools/content-translator)
+- [kirby-live-preview](https://kirby.tools/live-preview)
+- [kirby-seo-audit](https://kirby.tools/seo-audit)
+
 ## License
 
 [AGPL](./LICENSE) License © 2024-PRESENT [Johann Schopplich](https://github.com/johannschopplich)
