@@ -310,4 +310,43 @@ final class LicenseActivationTest extends LicenseTestCase
 
         $activator->activate('test@example.com', '123456');
     }
+
+    #[Test]
+    public function activate_throws_when_the_license_file_cannot_be_written(): void
+    {
+        App::plugin(
+            name: 'simple/package',
+            extends: [],
+            info: ['version' => '1.0.0'],
+            version: '1.0.0'
+        );
+
+        $this->httpClient->method('request')->willReturn([
+            'packageName' => 'simple/package',
+            'licenseKey' => 'KT1-ABC123-DEF456',
+            'licenseCompatibility' => '^1.0.0',
+            'order' => [
+                'createdAt' => '2024-01-01T00:00:00Z'
+            ]
+        ]);
+
+        $activator = new LicenseActivator(
+            'simple/package',
+            new LicenseRepository(),
+            new LicenseValidator('simple/package'),
+            $this->httpClient
+        );
+
+        // A directory in place of the file fails the write without a permission error.
+        mkdir(self::LICENSE_FILE_PATH);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('The file "' . self::LICENSE_FILE_PATH . '" is not writable');
+
+        try {
+            $activator->activate('test@example.com', '123456');
+        } finally {
+            rmdir(self::LICENSE_FILE_PATH);
+        }
+    }
 }
