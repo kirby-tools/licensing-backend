@@ -39,7 +39,6 @@ final class LicenseRepository
             return $this->cache;
         }
 
-        // A directory in place of the file holds no licenses either.
         if (is_file($this->licenseFile) === false) {
             return $this->cache = [];
         }
