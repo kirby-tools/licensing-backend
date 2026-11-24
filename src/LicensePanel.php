@@ -80,7 +80,7 @@ final class LicensePanel
                             'icon' => 'open',
                             'text' => I18n::translate('kirby-tools.license.info.upgrade'),
                             'theme' => 'love',
-                            'link' => 'https://kirby.tools/' . $pluginId . '/buy',
+                            'link' => 'https://hub.kirby.tools',
                             'target' => '_blank'
                         ] : [
                             'icon' => 'open',
