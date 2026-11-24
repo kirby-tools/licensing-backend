@@ -90,6 +90,14 @@ final class LicensePanel
                             'target' => '_blank'
                         ];
 
+                    // The upgrade issues a new key, which replaces this one.
+                    $cancelButton = $status === LicenseStatus::Upgradeable ?
+                        [
+                            'icon' => 'key',
+                            'text' => I18n::translate('kirby-tools.license.activate.submit'),
+                            'dialog' => LicenseUtils::toActivationDialog($packageName)
+                        ] : true;
+
                     $pluginVersion = LicenseUtils::getPluginVersion($packageName) ?? '–';
 
                     return [
@@ -120,6 +128,7 @@ final class LicensePanel
                                     ]
                                 ]
                             ],
+                            'cancelButton' => $cancelButton,
                             'submitButton' => $submitButton
                         ]
                     ];

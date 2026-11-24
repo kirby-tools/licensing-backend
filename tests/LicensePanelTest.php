@@ -44,15 +44,15 @@ final class LicensePanelTest extends LicenseTestCase
         ]);
     }
 
-    private function registerActivatedPlugin(string $licenseKey): void
+    private function registerActivatedPlugin(string $licenseKey, string $version = '1.0.0'): void
     {
-        App::plugin(name: self::PACKAGE_NAME, extends: [], info: ['version' => '1.0.0'], version: '1.0.0');
+        App::plugin(name: self::PACKAGE_NAME, extends: [], info: ['version' => $version], version: $version);
 
         file_put_contents(self::LICENSE_FILE_PATH, json_encode([
             self::PACKAGE_NAME => [
                 'licenseKey' => $licenseKey,
                 'licenseCompatibility' => '^1.0.0',
-                'pluginVersion' => '1.0.0'
+                'pluginVersion' => $version
             ]
         ]));
     }
@@ -228,6 +228,17 @@ final class LicensePanelTest extends LicenseTestCase
         I18n::$locale = fn (): string => 'fr';
 
         $this->assertSame('Sous licence', LicensePanel::statusLabel(LicenseStatus::Active));
+    }
+
+    #[Test]
+    public function license_dialog_offers_the_activation_dialog_for_an_upgradeable_license(): void
+    {
+        $this->registerActivatedPlugin('KT1-ABC123-DEF456', version: '2.0.0');
+
+        $load = LicensePanel::dialogs(self::PACKAGE_NAME, 'Test Plugin')['johannschopplich-test-plugin/license']['load'];
+        $dialog = $load->call(new Route('', 'GET', $load));
+
+        $this->assertSame('johannschopplich-test-plugin/activate', $dialog['props']['cancelButton']['dialog']);
     }
 
     #[Test]
